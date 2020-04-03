@@ -1,0 +1,23 @@
+{
+  "name": "two-page-timer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "~4.17.1",
+    "socket.io": "~2.3.0"
+  },
+  "devDependencies": {
+    "@types/express": "~4.17.4",
+    "@types/node": "~13.9.8",
+    "@types/socket.io": "~2.1.4",
+    "@types/socket.io-client": "~1.4.32"
+  }
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Two Page Timer</title>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="utf8">
+</head>
+
+<body>
+    <div id="left" class="border"></div>
+    <div id="right" class="border"></div>
+    <div id="top" class="border"></div>
+    <div id="bottom" class="border"></div>
+    <div id="urlControl">localhost:8800?view=<input type="text" id="urlId">
+        <button id="copyLink">Copy Link</button>
+    </div>
+    <div id="controls" draggable="true">
+        <div id="controlHead">
+            <select name="times" id="timeSelection">
+                <option value="tt">Table Topic (1-2min)</option>
+                <option value="ib">IceBreaker (4-6Min)</option>
+                <option value="s">Speech (5-7min)</option>
+                <option value="e">Evaluation (2-3min)</option>
+                <option value="1">1 Minute</option>
+                <option value="TOut">1Min Timeout</option>
+            </select>
+            <input type="text" name="speakerName" id="SpeakerName" placeholder="Speakers Name">
+        </div>
+        <div id="timeReadout">00:00</div>
+        <div id="timeSettings">
+            <input type="text" name="Green" id="GreenTime" value="01:00">
+            <input type="text" name="Yellow" id="YellowTime" value="01:30">
+            <input type="text" name="Red" id="RedTime" value="02:00">
+            <input type="text" name="OverTime" id="OverTime" value="03:00">
+        </div>
+        <div id="controlButtons">
+            <button id="timerStart">Start</button>
+            <button id="timerStop">Stop</button>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/web.js"></script>
+</body>
+
+</html>

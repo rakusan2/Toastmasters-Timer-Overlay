@@ -1,0 +1,113 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    text-align: center;
+}
+body{
+    background-color: rgb(255, 255, 255);
+}
+
+.red-bg{
+    background-color: red;
+}
+
+.yellow-bg{
+    background-color: yellow;
+}
+
+.green-bg{
+    background-color: green;
+}
+.border {
+    position: fixed;
+    margin: 0;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+#left, #right {
+    top: 0;
+    bottom: 0;
+    width: 20px;
+}
+
+#left {
+    left: 0;
+}
+
+#right {
+    right: 0;
+}
+
+#top, #bottom {
+    left: 0;
+    right: 0;
+    height: 20px;
+}
+
+#top {
+    top: 0;
+}
+
+#bottom {
+    bottom: 0;
+}
+#urlControl>input{
+    width: 4em;
+}
+#urlControl{
+    padding: 5px;
+    border: 2px solid #5b85f8;
+    position: relative;
+    width: 30em;
+    top: 10%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    background-color: rgb(214, 214, 214);
+}
+
+#controls {
+    border: 2px solid #5b85f8;
+    position: relative;
+    width: 30em;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgb(214, 214, 214);
+}
+
+#controls>div {
+    width: 100%;
+    margin: 5px 0;
+}
+
+#timeSelection {
+    width: 15em;
+}
+
+#timeReadout {
+    font-size: 30px;
+}
+#timeSettings>input{
+    width:4em;
+}
+#controlButtons>button{
+    width:4em;
+}
+#GreenTime{
+    background-color: rgba(0, 255, 0, 0.5);
+}
+#YellowTime{
+    background-color: rgba(255, 255, 0, 0.5);
+}
+#RedTime{
+    background-color: rgba(255, 0, 0, 0.5);
+}
+#OverTime{
+    background-color: rgb(255, 0, 0);
+}
+
+.hide{
+    display: none;
+}
