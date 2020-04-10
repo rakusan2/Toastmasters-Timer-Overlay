@@ -1,3 +1,4 @@
+const HOST = 'localhost:8888'
 const socket = io()
 const controlBox = document.getElementById('controls') as HTMLDivElement
 const urlControlBox = document.getElementById('urlControl') as HTMLDivElement
@@ -58,6 +59,7 @@ function selectPreselect(val: any) {
 
 function timeCalc() {
     if (timeControl.timerStart === 0) {
+        readout.data = '00:00'
         setBorder('white')
     }
 
@@ -85,8 +87,11 @@ function timeCalc() {
 
     const sec = secElapsed % 60
     const min = (secElapsed - sec) / 60
+    const timeStr = `${digitNumber(min, 2)}:${digitNumber(sec, 2)}`
 
-    readout.data = `${digitNumber(min,2)}:${digitNumber(sec,2)}`
+    if (timeStr != readout.data) {
+        readout.data = timeStr
+    }
 
     if (intervalTimer === -1 && timerStart > 0 && timerStop === 0) {
         intervalTimer = window.setInterval(() => window.requestAnimationFrame(() => timeCalc()))
@@ -99,8 +104,8 @@ function timeCalc() {
 
 }
 
-function digitNumber(num:number, count:number){
-    return num.toFixed(0).padStart(count,'0')
+function digitNumber(num: number, count: number) {
+    return num.toFixed(0).padStart(count, '0')
 }
 
 function setBorder(colour: 'red' | 'yellow' | 'green' | 'white') {
@@ -111,6 +116,7 @@ function setBorder(colour: 'red' | 'yellow' | 'green' | 'white') {
 }
 
 function setBorderClass(name: string) {
+    if (border.top.className.trim() === name.trim()) return
     border.top.className = name
     border.bottom.className = name
     border.left.className = name
@@ -213,13 +219,31 @@ buttons.linkCopyButton.onclick = function () {
     navigator?.permissions?.query?.({ name: 'clipboard-write' } as any)
         .then(res => {
             if (res.state === 'granted' || res.state === 'prompt') {
-                navigator.clipboard.writeText(`localhost:8888?view=${id}`)
-                urlId.classList.toggle('bg-green', true)
+                navigator.clipboard.writeText(`${HOST}?view=${id}`)
+                urlId.classList.toggle('green-bg', true)
                 setTimeout(() => urlId.classList.toggle('green-bg', false), 500)
             }
         })
 }
-
+function fixTime(time: string) {
+    const ex = extractTime(time)
+    return `${ex.min}:${ex.s}`
+}
+function extractTime(time: string) {
+    const m = time.match(timeFormat)
+    if (m == null) {
+        let t = +time
+        if (Number.isNaN(t) || t < 0) {
+            return { s: '00', min: '00' }
+        } else {
+            const sec = t % 60
+            const min = (t - sec) /60
+            return { s: sec.toFixed(0).padStart(2, '0'), min: min.toFixed(0).padStart(2, '0') }
+        }
+    } else {
+        return { s: (m[2] == null ? '00' : m[2].padStart(2, '0')), min: (m[1] == null ? '00' : m[1].padStart(2, '0')) }
+    }
+}
 selector.onchange = changeTimes
 function changeTimes() {
     const { green, yellow, red, overtime } = timeControl
@@ -274,19 +298,53 @@ function changeTimes() {
     }
     if (changed) {
         if (lastSelection != val) {
-            sendSettings({ presetTime: val })
+            sendSettings({ presetTime: val, timerGreen: green.value, timerYellow: yellow.value, timerRed: red.value, timerOvertime: overtime.value })
         }
         lastSelection = val
     }
 }
 
+timeControl.green.onchange = function () {
+    const val = fixTime(timeControl.green.value)
+    timeControl.green.value = val
+    setSetting('timerGreen', val, true)
+}
+timeControl.red.onchange = function () {
+    const val = fixTime(timeControl.red.value)
+    timeControl.red.value = val
+    setSetting('timerRed', val, true)
+}
+
+timeControl.yellow.onchange = function () {
+    const val = fixTime(timeControl.yellow.value)
+    timeControl.yellow.value = val
+    setSetting('timerYellow', val, true)
+}
+
+timeControl.overtime.onchange = function () {
+    const val = fixTime(timeControl.overtime.value)
+    timeControl.overtime.value = val
+    setSetting('timerOvertime', val, true)
+}
+
+
 buttons.startButton.onclick = function () {
-    setSetting('timerStart', Date.now(), true)
+    if (timeControl.timerStop > 0) {
+        const settings = { timerStart: timeControl.timerStart + (Date.now() - timeControl.timerStop), timerStop: 0 }
+        setSettings(settings)
+        sendSettings(settings)
+    } else if (timeControl.timerStart === 0) {
+        const settings = { timerStart: Date.now(), timerStop: 0 }
+        setSettings(settings)
+        sendSettings(settings)
+    } else return
     timeCalc()
 }
 buttons.stopButton.onclick = function () {
-    setSetting('timerStop', Date.now(), true)
-    timeCalc()
+    if (timeControl.timerStop === 0) {
+        setSetting('timerStop', Date.now(), true)
+        timeCalc()
+    }
 }
 buttons.resetButton.onclick = function () {
     const settings = { timerStart: 0, timerStop: 0 }
@@ -304,6 +362,7 @@ socket.on('connect', () => {
             if (typeof params['view'] == 'undefined') {
                 history.replaceState({ id }, document.title, `?id=${id}`)
             }
+            setSettings(res.settings)
         } else {
             console.error({ from: 'init', err: res.err })
         }
