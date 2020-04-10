@@ -10,10 +10,10 @@ OBS will hide the background
 Usage:
 1. Download 
     - this project
-    - NodeJS
-    - Typescript
-    - OBS Studio
-    - OBS VirtualCam
+    - [NodeJS](https://nodejs.org/en/)
+    - [Typescript](https://www.typescriptlang.org/)
+    - [OBS Studio](https://obsproject.com/)
+    - [OBS VirtualCam](https://obsproject.com/forum/resources/obs-virtualcam.539/)
 2. Run `npm install`
 3. Run `tsc`
 4. Run `npm start`
