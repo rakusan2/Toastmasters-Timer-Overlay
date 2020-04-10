@@ -25,16 +25,21 @@ web.listen(PORT, () => {
 io.on('connection', socket => {
     let userID: number
     let user: IUser
-    socket.on('disconnect', () => {
+
+    function disconnect(){
         if (typeof userID == 'number' && typeof sockets[userID] !== 'undefined') {
             sockets[userID] = sockets[userID].filter(soc => soc != socket)
             console.log({ disconnect: { id: userID } })
-            console.log(`ID ${userID} has ${sockets[userID].length} users`)
+            console.log(`ID ${userID.toString(16)} has ${sockets[userID].length} users`)
         }
-    })
+    }
+
+    socket.on('disconnect', () => disconnect())
     socket.on('init', (id, fn: IResponseFn<IResponseInit>, ...args) => {
         console.log({ init: { id, args } })
         try {
+            disconnect()
+
             userID = initUser(id)
             user = users[userID]
             console.log({ user, userID })
@@ -45,7 +50,7 @@ io.on('connection', socket => {
                 sockets[userID].push(socket)
             }
 
-            console.log(`ID ${userID} has ${sockets[userID].length} users`)
+            console.log(`ID ${userID.toString(16)} has ${sockets[userID].length} users`)
 
             user.lastMessageAt = Date.now()
             fn({ ok: true, id: userID, settings: user.settings })
@@ -77,9 +82,13 @@ io.on('connection', socket => {
             }
         }
         fn({ ok: true, keysNotSet })
-        console.log({changedSettings})
+        console.log({keysNotSet})
         if (Object.keys(changedSettings).length > 0) {
-            sockets[userID].forEach(soc => soc.emit('changedSetting', { ok: true, settings: changedSettings }))
+            sockets[userID].forEach(soc => {
+                if(socket !== soc){
+                    soc.emit('changedSetting', { ok: true, settings: changedSettings })
+                }
+            })
         }
     }).on('get', (keys: string | string[] | undefined, fn: IResponseFn<ISettings>) => {
         console.log({ get: { id: userID, keys } })
