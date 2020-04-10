@@ -56,6 +56,11 @@ body{
 #urlControl>input{
     width: 4em;
 }
+#urlId{
+    background-color: rgb(214, 214, 214);
+    border: none;
+    text-decoration: underline;
+}
 #urlControl{
     padding: 5px;
     border: 2px solid #5b85f8;

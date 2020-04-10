@@ -32,7 +32,7 @@ const NUM_OF_SPEECH_PRESETS = 7
 const timeFormat = /(\d{1,2}):(\d{1,2})/
 
 const params = getParams()
-const isView = typeof params.view === 'string'
+const isView = typeof params.view !== 'undefined'
 let id = params?.view || params?.id
 
 let idSet = false
@@ -204,10 +204,14 @@ const setFns: IKeyVal<(val: ISetting) => boolean | undefined> = {
 
 
 function getParams() {
-    const params: { [key: string]: string } = {}
-    document.URL.split('?').slice(1).forEach(a => {
-        const [key, val] = a.split('=').map(a => a.trim())
-        params[key] = val
+    const params: { [key: string]: string | null } = {}
+    document.URL.split('?').slice(1).forEach(query => {
+        query.split('&').forEach(part=>{
+            const [key, val] = part.split('=').map(a => a.trim())
+            if(key.length > 0){
+                params[key] = (val == null ? null : val)
+            }
+        })
     })
     return params
 }
@@ -219,7 +223,7 @@ buttons.linkCopyButton.onclick = function () {
     navigator?.permissions?.query?.({ name: 'clipboard-write' } as any)
         .then(res => {
             if (res.state === 'granted' || res.state === 'prompt') {
-                navigator.clipboard.writeText(`${HOST}?view=${id}`)
+                navigator.clipboard.writeText(`${HOST}?view&id=${id}`)
                 urlId.classList.toggle('green-bg', true)
                 setTimeout(() => urlId.classList.toggle('green-bg', false), 500)
             }
@@ -356,11 +360,12 @@ socket.on('connect', () => {
     socket.emit('init', id, (res: IResponse<IResponseInit>) => {
         console.log({ init: res })
         if (res.ok) {
+            const lastID = id
             id = res.id.toString(16)
             urlId.value = id
             idSet = true
-            if (typeof params['view'] == 'undefined') {
-                history.replaceState({ id }, document.title, `?id=${id}`)
+            if(lastID != id){
+                history.replaceState({ id }, document.title, `?${isView?'view&':''}id=${id}`)
             }
             setSettings(res.settings)
         } else {
