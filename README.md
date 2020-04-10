@@ -1,7 +1,7 @@
 # Toastmasters Timer Overlay
 This is a webpage that can be used as an overlay for the purpose of timing for a Toastmasters meeting
 
-The Overlay is controlled from a local website.
+The Overlay is controlled from a local website that is mirrored across all with the same id. The view parameter hides the controls
 
 OBS will hide the background
 
