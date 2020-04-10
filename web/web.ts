@@ -12,7 +12,13 @@ const timeControl = {
     red: document.getElementById('RedTime') as HTMLInputElement,
     overtime: document.getElementById('OverTime') as HTMLInputElement,
     timerStart: 0,
-    timerStop: 0
+    timerStop: 0,
+    custom: {
+        green: '00:05',
+        yellow: '00:10',
+        red: '00:15',
+        overtime: '00:20'
+    }
 }
 let lastSelection = 'tt'
 
@@ -28,7 +34,6 @@ const border = {
     top: document.getElementById('top') as HTMLDivElement,
     bottom: document.getElementById('bottom') as HTMLDivElement,
 }
-const NUM_OF_SPEECH_PRESETS = 7
 const timeFormat = /(\d{1,2}):(\d{1,2})/
 
 const params = getParams()
@@ -37,13 +42,67 @@ let id = params?.view || params?.id
 
 let idSet = false
 
-let intervalTimer = -1
+const timePresets = fixTimes({
+    'TT': {
+        green: '1:00',
+        yellow: '1:30',
+        red: '2:00',
+        overtime: '3:00'
+    },
+    'IceBr': {
+        green: '4:00',
+        yellow: '5:00',
+        red: '6:00',
+        overtime: '7:00'
+    },
+    'Speech': {
+        green: '5:00',
+        yellow: '6:00',
+        red: '7:00',
+        overtime: '8:00'
+    },
+    'Eval': {
+        green: '2:00',
+        yellow: '2:30',
+        red: '3:00',
+        overtime: '4:00'
+    },
+    '1Min': {
+        green: '0:30',
+        yellow: '0:45',
+        red: '1:00',
+        overtime: '2:00'
+    },
+    'TOut': {
+        green: '1:00',
+        yellow: '1:00',
+        red: '1:00',
+        overtime: '1:00'
+    },
+    'Test': {
+        green: '0:05',
+        yellow: '0:10',
+        red: '0:15',
+        overtime: '0:20'
+    }
+})
+
+const defaultSettings: ISettingInput = {
+    timerStart: 0,
+    timerStop: 0,
+    timerGreen: '01:00',
+    timerYellow: '01:30',
+    timerRed: '02:00',
+    timerOvertime: '03:00',
+    speakerName: '',
+    presetTime: 'tt'
+}
 
 controlBox.classList.toggle('hide', isView)
 urlControlBox.classList.toggle('hide', isView)
 
 function selectPreselect(val: any) {
-    if (typeof val === 'number' && val > 0 && val < NUM_OF_SPEECH_PRESETS) {
+    if (typeof val === 'number' && val > 0 && val < selector.options.length) {
         selector.value = (<HTMLOptionElement>selector.item(val)).value
         changeTimes()
         return true
@@ -61,6 +120,7 @@ function timeCalc() {
     if (timeControl.timerStart === 0) {
         readout.data = '00:00'
         setBorder('white')
+        return
     }
 
     const { timerStart, timerStop } = timeControl
@@ -80,28 +140,33 @@ function timeCalc() {
     } else if (msElapsed < overtime) {
         setBorder('red')
     } else {
-        setBorder((msElapsed - overtime) % 1000 < 500 ? 'red' : 'white')
+        setBorder((msElapsed - overtime) % 1000 < 500 ? 'white' : 'red')
     }
 
-    const secElapsed = msElapsed / 1000
+    const secElapsed = Math.floor(msElapsed / 1000)
 
     const sec = secElapsed % 60
-    const min = (secElapsed - sec) / 60
+    const min = Math.floor(secElapsed / 60)
     const timeStr = `${digitNumber(min, 2)}:${digitNumber(sec, 2)}`
 
     if (timeStr != readout.data) {
         readout.data = timeStr
     }
 
-    if (intervalTimer === -1 && timerStart > 0 && timerStop === 0) {
-        intervalTimer = window.setInterval(() => window.requestAnimationFrame(() => timeCalc()))
-        console.log('Set Timer')
-    } else if (intervalTimer != -1 && (timerStart === 0 || (timerStop > 0 && Date.now() > timerStop))) {
-        clearInterval(intervalTimer)
-        intervalTimer = -1
-        console.log('Cleared Timer')
+    if (timerStart > 0 && timerStop === 0) {
+        requestNextFrame()
     }
 
+}
+let reDrawInProgress = false
+function requestNextFrame() {
+    if (!reDrawInProgress) {
+        reDrawInProgress = true
+        window.requestAnimationFrame(() => {
+            reDrawInProgress = false
+            timeCalc()
+        })
+    }
 }
 
 function digitNumber(num: number, count: number) {
@@ -111,16 +176,21 @@ function digitNumber(num: number, count: number) {
 function setBorder(colour: 'red' | 'yellow' | 'green' | 'white') {
     if (colour === 'white') {
         setBorderClass('border')
+    } else {
+        setBorderClass(`border ${colour}-bg`)
     }
-    setBorderClass(`border ${colour}-bg`)
 }
 
 function setBorderClass(name: string) {
-    if (border.top.className.trim() === name.trim()) return
-    border.top.className = name
-    border.bottom.className = name
-    border.left.className = name
-    border.right.className = name
+    const lastName = border.top.className.trim()
+    const newName = name.trim()
+
+    if (lastName === newName) return
+
+    border.top.className = newName
+    border.bottom.className = newName
+    border.left.className = newName
+    border.right.className = newName
 }
 
 function minSecToMS(val: string) {
@@ -133,60 +203,55 @@ function minSecToMS(val: string) {
     }
 }
 
-const setFns: IKeyVal<(val: ISetting) => boolean | undefined> = {
+function setStartButtonText() {
+    const textNode = buttons.startButton.firstChild as Text
+    if (timeControl.timerStart > 0 && timeControl.timerStop > 0) {
+        textNode.data = 'Resume'
+    } else {
+        textNode.data = 'Start'
+    }
+}
+
+const setFns: ISettingControl = {
     timerStart(val) {
         if (typeof val === 'number') {
             timeControl.timerStart = val
+            setStartButtonText()
             return true
         }
     },
     timerStop(val) {
         if (typeof val === 'number') {
             timeControl.timerStop = val
+            setStartButtonText()
             return true
         }
     },
     timerGreen(val) {
-        if (typeof val === 'number') {
-            const sec = val % 60
-            const min = ((val - sec) / 60) % 60
-            timeControl.green.value = `${min}:${sec}`
-            return true
-        } else if (typeof val === 'string' && timeFormat.test(val)) {
-            timeControl.green.value = val
+        const time = fixTime(val, null)
+        if (time != null) {
+            timeControl.custom.green = time
             return true
         }
     },
     timerYellow(val) {
-        if (typeof val === 'number') {
-            const sec = val % 60
-            const min = ((val - sec) / 60) % 60
-            timeControl.yellow.value = `${min}:${sec}`
-            return true
-        } else if (typeof val === 'string' && timeFormat.test(val)) {
-            timeControl.yellow.value = val
+        const time = fixTime(val, null)
+        if (time != null) {
+            timeControl.custom.yellow = time
             return true
         }
     },
     timerRed(val) {
-        if (typeof val === 'number') {
-            const sec = val % 60
-            const min = ((val - sec) / 60) % 60
-            timeControl.red.value = `${min}:${sec}`
-            return true
-        } else if (typeof val === 'string' && timeFormat.test(val)) {
-            timeControl.red.value = val
+        const time = fixTime(val, null)
+        if (time != null) {
+            timeControl.custom.red = time
             return true
         }
     },
     timerOvertime(val) {
-        if (typeof val === 'number') {
-            const sec = val % 60
-            const min = ((val - sec) / 60) % 60
-            timeControl.overtime.value = `${min}:${sec}`
-            return true
-        } else if (typeof val === 'string' && timeFormat.test(val)) {
-            timeControl.overtime.value = val
+        const time = fixTime(val, null)
+        if (time != null) {
+            timeControl.custom.overtime = time
             return true
         }
     },
@@ -201,14 +266,12 @@ const setFns: IKeyVal<(val: ISetting) => boolean | undefined> = {
     }
 }
 
-
-
 function getParams() {
     const params: { [key: string]: string | null } = {}
     document.URL.split('?').slice(1).forEach(query => {
-        query.split('&').forEach(part=>{
+        query.split('&').forEach(part => {
             const [key, val] = part.split('=').map(a => a.trim())
-            if(key.length > 0){
+            if (key.length > 0) {
                 params[key] = (val == null ? null : val)
             }
         })
@@ -229,120 +292,108 @@ buttons.linkCopyButton.onclick = function () {
             }
         })
 }
-function fixTime(time: string) {
-    const ex = extractTime(time)
-    return `${ex.min}:${ex.s}`
+
+function fixTimes(presets: IKeyVal<{ [P in keyof ITimePreset]: IBadTimeInput }>): IKeyVal<ITimePreset> {
+    const res: IKeyVal<ITimePreset> = {}
+    for (let key in presets) {
+        const { green, yellow, red, overtime } = presets[key]
+        res[key] = {
+            green: fixTime(green),
+            yellow: fixTime(yellow),
+            red: fixTime(red),
+            overtime: fixTime(overtime),
+        }
+    }
+    return res
 }
-function extractTime(time: string) {
-    const m = time.match(timeFormat)
+
+function fixTime(time: IBadTimeInput): string
+function fixTime<T>(time: IBadTimeInput, defaultVal: T): string | T
+function fixTime(time: IBadTimeInput, defaultVal: any = '00:00') {
+    const ex = extractTime(time)
+    if (ex == null) {
+        return defaultVal
+    } else {
+        return `${ex.min}:${ex.s}`
+    }
+}
+function extractTime(time: IBadTimeInput) {
+    if (time == null) return null
+    const m = (typeof time === 'string' ? time.match(timeFormat) : null)
     if (m == null) {
         let t = +time
         if (Number.isNaN(t) || t < 0) {
-            return { s: '00', min: '00' }
+            return null
         } else {
             const sec = t % 60
-            const min = (t - sec) /60
+            const min = (t - sec) / 60
             return { s: sec.toFixed(0).padStart(2, '0'), min: min.toFixed(0).padStart(2, '0') }
         }
     } else {
-        return { s: (m[2] == null ? '00' : m[2].padStart(2, '0')), min: (m[1] == null ? '00' : m[1].padStart(2, '0')) }
+        return { s: m[2].padStart(2, '0'), min: m[1].padStart(2, '0') }
     }
 }
-selector.onchange = changeTimes
+selector.onchange = () => {
+    if (changeTimes()) {
+        sendSettings({ presetTime: selector.value })
+    }
+    timeCalc()
+}
 function changeTimes() {
-    const { green, yellow, red, overtime } = timeControl
     const val = selector.value
-    let changed = true
-    switch (val) {
-        case 'tt':
-            green.value = '1:00'
-            yellow.value = '1:30'
-            red.value = '2:00'
-            overtime.value = '3:00'
-            break
-        case 'ib':
-            green.value = '4:00'
-            yellow.value = '5:00'
-            red.value = '6:00'
-            overtime.value = '7:00'
-            break
-        case 's':
-            green.value = '5:00'
-            yellow.value = '6:00'
-            red.value = '7:00'
-            overtime.value = '8:00'
-            break
-        case 'e':
-            green.value = '2:00'
-            yellow.value = '2:30'
-            red.value = '3:00'
-            overtime.value = '4:00'
-            break
-        case '1':
-            green.value = '0:30'
-            yellow.value = '0:45'
-            red.value = '1:00'
-            overtime.value = '2:00'
-            break
-        case 'TOut':
-            green.value = '1:00'
-            yellow.value = '1:00'
-            red.value = '1:00'
-            overtime.value = '1:30'
-            break
-        case 'test':
-            green.value = '0:05'
-            yellow.value = '0:10'
-            red.value = '0:15'
-            overtime.value = '0:20'
-            break
-        default:
-            selector.value = lastSelection
-            changed = false
+    if (val === 'Custom') {
+        setTimeSections(timeControl.custom)
+    } else if (typeof timePresets[val] == 'object') {
+        setTimeSections(timePresets[val])
+    } else {
+        return false
     }
-    if (changed) {
-        if (lastSelection != val) {
-            sendSettings({ presetTime: val, timerGreen: green.value, timerYellow: yellow.value, timerRed: red.value, timerOvertime: overtime.value })
-        }
-        lastSelection = val
-    }
+    return true
+}
+
+function setTimeSections(sectTimes: ITimePreset) {
+    const { green, yellow, red, overtime } = timeControl
+    green.value = sectTimes.green
+    yellow.value = sectTimes.yellow
+    red.value = sectTimes.red
+    overtime.value = sectTimes.overtime
 }
 
 timeControl.green.onchange = function () {
     const val = fixTime(timeControl.green.value)
-    timeControl.green.value = val
-    setSetting('timerGreen', val, true)
+    setSettings({ timerGreen: val, presetTime: 'custom' }, true)
 }
 timeControl.red.onchange = function () {
     const val = fixTime(timeControl.red.value)
-    timeControl.red.value = val
-    setSetting('timerRed', val, true)
+    setSettings({ timerRed: val, presetTime: 'custom' }, true)
 }
 
 timeControl.yellow.onchange = function () {
     const val = fixTime(timeControl.yellow.value)
-    timeControl.yellow.value = val
-    setSetting('timerYellow', val, true)
+    setSettings({ timerYellow: val, presetTime: 'custom' }, true)
 }
 
 timeControl.overtime.onchange = function () {
     const val = fixTime(timeControl.overtime.value)
-    timeControl.overtime.value = val
-    setSetting('timerOvertime', val, true)
+    setSettings({ timerOvertime: val, presetTime: 'custom' }, true)
+}
+
+urlId.onchange = function () {
+    const val = urlId.value.toLowerCase()
+    if (/^[0-9a-f]{1,4}$/.test(val)) {
+        init(val)
+    }
 }
 
 
 buttons.startButton.onclick = function () {
     if (timeControl.timerStop > 0) {
         const settings = { timerStart: timeControl.timerStart + (Date.now() - timeControl.timerStop), timerStop: 0 }
-        setSettings(settings)
-        sendSettings(settings)
+        setSettings(settings, true)
     } else if (timeControl.timerStart === 0) {
         const settings = { timerStart: Date.now(), timerStop: 0 }
-        setSettings(settings)
-        sendSettings(settings)
+        setSettings(settings, true)
     } else return
-    timeCalc()
 }
 buttons.stopButton.onclick = function () {
     if (timeControl.timerStop === 0) {
@@ -352,26 +403,11 @@ buttons.stopButton.onclick = function () {
 }
 buttons.resetButton.onclick = function () {
     const settings = { timerStart: 0, timerStop: 0 }
-    setSettings(settings)
-    sendSettings(settings)
+    setSettings(settings, true)
 }
 
 socket.on('connect', () => {
-    socket.emit('init', id, (res: IResponse<IResponseInit>) => {
-        console.log({ init: res })
-        if (res.ok) {
-            const lastID = id
-            id = res.id.toString(16)
-            urlId.value = id
-            idSet = true
-            if(lastID != id){
-                history.replaceState({ id }, document.title, `?${isView?'view&':''}id=${id}`)
-            }
-            setSettings(res.settings)
-        } else {
-            console.error({ from: 'init', err: res.err })
-        }
-    })
+    init(id)
 })
 socket.on('changedSetting', (res: IResponse<ISettings>) => {
     console.log({ changedSetting: res })
@@ -382,29 +418,54 @@ socket.on('changedSetting', (res: IResponse<ISettings>) => {
     }
 })
 
-function setSettings(settings: IKeyVal<ISetting>) {
-    for (let key in settings) {
-        setSetting(key, settings[key], false)
+function init(clientID?: string | null) {
+    if (socket.connected) {
+        socket.emit('init', clientID, (res: IResponse<IResponseInit>) => {
+            console.log({ init: res })
+            if (res.ok) {
+                const lastID = id
+                id = res.id.toString(16)
+                urlId.value = id
+                idSet = true
+                if (lastID != id) {
+                    history.replaceState({ id }, document.title, `?${isView ? 'view&' : ''}id=${id}`)
+                }
+                setSettings({ ...defaultSettings, ...res.settings })
+            } else {
+                console.error({ from: 'init', err: res.err })
+            }
+        })
+    } else {
+        console.error('Init when not connected')
     }
+}
+
+function setSettings(settings: ISettingInput, send = false) {
+    for (let key in settings) {
+        setSetting(key, settings[key])
+    }
+    if (send) {
+        sendSettings(settings)
+    }
+    changeTimes()
     timeCalc()
 }
 
-function setSetting(key: string, val: ISetting, send = true) {
+function setSetting<T extends keyof ISettingInput>(key: T, val: ISettingInput[T], send = false) {
     if (typeof setFns[key] == 'function') {
         if (setFns[key](val)) {
-            console.log({ set: { key, val } })
             if (send) {
                 sendSettings({ [key]: val })
             }
         } else {
-            console.error(`Invalid ${key} value. Got ${val}`)
+            console.warn(`Invalid "${key}" value. Got ${val}`)
         }
     } else {
-        console.log({ unknown: key })
+        console.warn(`Unknown Key "${key}"`)
     }
 }
 
-function sendSettings(settings: IKeyVal<ISetting>) {
+function sendSettings(settings: ISettingInput) {
     if (idSet && socket.connected) {
         socket.emit('set', settings, (res: IResponse<{ keysNotSet: string[] }>) => {
             if (res.ok && res.keysNotSet.length > 0) {
@@ -432,7 +493,32 @@ interface IResponseInit extends ISettings {
     id: number
 }
 interface ISettings {
-    settings: IKeyVal<ISetting>
+    settings: ISettingInput
 }
 type IKeyVal<T> = { [key: string]: T }
 type ISetting = string | number | boolean
+type IFn<T, K = any> = (val: T) => K
+type IBadTimeInput = string | number | null | undefined
+
+interface ISettingInput {
+    timerStart?: number
+    timerStop?: number
+    timerGreen?: number | string
+    timerYellow?: number | string
+    timerRed?: number | string
+    timerOvertime?: number | string
+    speakerName?: string
+    presetTime?: number | string
+    [key: string]: any
+}
+
+type ISettingControl = Required<{
+    [P in keyof ISettingInput]: IFn<ISettingInput[P], boolean | undefined>
+}>
+
+interface ITimePreset {
+    red: string
+    green: string
+    yellow: string
+    overtime: string
+}
