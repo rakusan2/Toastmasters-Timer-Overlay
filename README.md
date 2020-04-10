@@ -7,26 +7,36 @@ OBS will hide the background
 
 ![site Usage](/img/site.gif)
 
-Usage:
+-----
+
+## Usage:
 1. Download 
-    - this project
-    - [NodeJS](https://nodejs.org/en/)
-    - [Typescript](https://www.typescriptlang.org/)
+    - [release version](https://github.com/rakusan2/Toastmasters-Timer-Overlay/releases/tag/v1.0.0)
     - [OBS Studio](https://obsproject.com/)
     - [OBS VirtualCam](https://obsproject.com/forum/resources/obs-virtualcam.539/)
-2. Run `npm install`
-3. Run `tsc`
-4. Run `npm start`
-5. Open a browser window at [localhost:8888](localhost:8888)
-6. Click **Copy Link**
-4. Open OBS Studio
-5. Setup your video in OBS
+2. Run the Timer Overlay
+3. Open a browser window at [localhost:8888](localhost:8888)
+4. Click **Copy Link**
+5. Open OBS Studio
+6. Setup your video in OBS
     1. Sources -> Add -> Video Capture Device
     2. Click the image and resize and move it to your liking
-6. Add Browser Capture
+7. Add Browser Capture
     1. Sources -> Add -> Browser
     2. Paste the copied link
-7. Start VirtualCam
+8. Start VirtualCam
     1. (Top Bar) -> Tools -> VirtualCam -> Start
-8. Change your Video Source to OBS-Camera
+9. Change your Video Source to OBS-Camera
     - In Zoom: Settings -> Video -> Camera -> OBS-Camera
+
+------
+
+## To run from source:
+1. Download
+    - [NodeJS](https://nodejs.org/en/)
+    - [Typescript](https://www.typescriptlang.org/)
+2. Run
+    1. `npm install`
+    2. `tsc`
+3. Start the application with `npm start`
+4. Continua from step 3 of Usage above
