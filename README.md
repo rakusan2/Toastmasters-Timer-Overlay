@@ -9,7 +9,7 @@ OBS will hide the background
 
 -----
 
-## Usage:
+### Usage:
 1. Download 
     - [release version](https://github.com/rakusan2/Toastmasters-Timer-Overlay/releases/tag/v1.0.0)
     - [OBS Studio](https://obsproject.com/)
@@ -31,7 +31,7 @@ OBS will hide the background
 
 ------
 
-## To run from source:
+### To run from source:
 1. Download
     - [NodeJS](https://nodejs.org/en/)
     - [Typescript](https://www.typescriptlang.org/)
