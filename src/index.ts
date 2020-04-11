@@ -1,32 +1,59 @@
 import * as http from 'http'
-import * as express from 'express'
 import * as socket from 'socket.io'
+import * as nodeStatic from 'node-static'
 
-const PORT = 8888
+const params = getParams(['port', 'cache'], ['help'])
+let port = 8888
+let cache: number | boolean = 3600
 
-const app = express()
-const web = http.createServer(app)
+if (typeof params.named.port == 'string') {
+    let tempPort = +params.named.port
+    if (!Number.isNaN(tempPort)) {
+        port = tempPort
+    } else {
+        console.warn(`Invalid Port Number. Got ${params.named.port}`)
+    }
+}
+if (typeof params.named.cache == 'string') {
+    let tempCache = params.named.cache
+    if (tempCache.toLowerCase() === 'false') {
+        cache = false
+    } else if (!Number.isNaN(+tempCache)) {
+        cache = +tempCache
+    } else {
+        console.warn(`Invalid Cache Time. Got ${params.named.cache}`)
+    }
+}
+
+if (typeof params.named.help != 'undefined') {
+    console.log(`Run with [port] [cache]
+    [port] sets the Port number to listen on
+    [cache] sets how many seconds the browser should cache the site for`)
+    process.exit()
+}
+
+const fileServer = new nodeStatic.Server('./web', { cache })
+
+const web = http.createServer((req, res) => {
+    req.addListener('end', () => {
+        fileServer.serve(req, res)
+    }).resume()
+})
 const io = socket(web)
 
 const users: { [id: number]: IUser } = {}
 
 const sockets: IKeyNVal<socket.Socket[]> = {}
 
-const path = __dirname.split('\\').slice(0, -1).join('\\') + '\\web'
-
-app.get('/', (req, res) => res.sendFile(path + '\\index.html'))
-app.get('/style.css', (req, res) => res.sendFile(path + '\\style.css'))
-app.get('/web.js', (req, res) => res.sendFile(path + '\\web.js'))
-
-web.listen(PORT, () => {
-    console.log(`listening at http://localhost:${PORT} with web at ${path}`)
+web.listen(port, () => {
+    console.log(`listening at http://localhost:${port} with cache set to ${cache}`)
 })
 
 io.on('connection', socket => {
     let userID: number
     let user: IUser
 
-    function disconnect(){
+    function disconnect() {
         if (typeof userID == 'number' && typeof sockets[userID] !== 'undefined') {
             sockets[userID] = sockets[userID].filter(soc => soc != socket)
             console.log({ disconnect: { id: userID } })
@@ -82,10 +109,10 @@ io.on('connection', socket => {
             }
         }
         fn({ ok: true, keysNotSet })
-        console.log({keysNotSet})
+        console.log({ keysNotSet })
         if (Object.keys(changedSettings).length > 0) {
             sockets[userID].forEach(soc => {
-                if(socket !== soc){
+                if (socket !== soc) {
                     soc.emit('changedSetting', { ok: true, settings: changedSettings })
                 }
             })
@@ -141,6 +168,37 @@ function getID() {
     } while (typeof users[id] !== 'undefined')
     users[id] = { settings: {}, lastMessageAt: Date.now() }
     return id
+}
+
+function getParams(names: string[] = [], flags: string[] = []) {
+    const nameless: string[] = []
+    const res: { named: IKeyVal<string>, extra: string[] } = { named: {}, extra: [] }
+    process.argv.splice(2).map(a => {
+        const named = a.match(/^([^=]*)=(.*)$/)
+        if (named == null) {
+            nameless.push(a)
+        } else {
+            const [, key, val] = named
+            res.named[key.toLowerCase()] = val
+        }
+    })
+    let namesIndex = 0
+    nameless.forEach((val, i) => {
+        const valLow = val.toLowerCase()
+        if (flags.includes(valLow) && typeof res.named[valLow] == 'undefined') {
+            res.named[valLow] = ''
+            return
+        }
+        while (namesIndex < names.length && typeof res.named[names[namesIndex]] != 'undefined') {
+            namesIndex++
+        }
+        if (namesIndex < names.length) {
+            res.named[names[namesIndex]] = val
+        } else {
+            res.extra.push(val)
+        }
+    })
+    return res
 }
 
 type IResponseFn<T = {}> = (res: IResponse<T>) => any
