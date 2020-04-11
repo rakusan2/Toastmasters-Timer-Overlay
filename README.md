@@ -40,3 +40,16 @@ OBS will hide the background
     2. `tsc`
 3. Start the application with `npm start`
 4. Continua from step 3 of Usage above
+
+-----
+
+### Arguments
+- **Port** [number] The port to listen on
+- **Cache** [number or false] How long the client should cache the page for
+- **One-Id** [string or boolean] Forces all ids to be the passed string or the string `aaaa` if true or nothing is passed
+
+The arguments `port=80 cache=false one-id=true`
+
+Are the same as `80 false one-id` and `80 false true`
+
+And would cause the port to be set to 80, caching to be disabled, and all ids to be `aaaa`

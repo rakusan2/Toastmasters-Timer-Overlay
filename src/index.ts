@@ -2,9 +2,10 @@ import * as http from 'http'
 import * as socket from 'socket.io'
 import * as nodeStatic from 'node-static'
 
-const params = getParams(['port', 'cache'], ['help'])
+const params = getParams(['port', 'cache', 'one-id'], ['help', 'one-id'])
 let port = 8888
 let cache: number | boolean = 3600
+let oneID: string | null = null
 
 if (typeof params.port == 'string') {
     let tempPort = +params.port
@@ -25,10 +26,35 @@ if (typeof params.cache == 'string') {
     }
 }
 
+if (typeof params['one-id'] != 'undefined') {
+    const val = params['one-id'].toLowerCase()
+    if (val == '') {
+        oneID = 'aaaa'
+    } else if (val == 'false' || val == 'true') {
+        oneID = (val == 'true' ? 'aaaa' : null)
+    } else {
+        try {
+            oneID = encodeURIComponent(params['one-id'])
+            if (oneID.length > 6) {
+                oneID = 'aaaa'
+                console.warn('The ID is too long. Setting id to "aaaa"')
+            }
+            if (oneID.includes('%')) {
+                oneID = 'aaaa'
+                console.warn('Invalid id. Setting id to "aaaa"')
+            }
+        } catch (err) {
+            oneID = 'aaaa'
+            console.error('That Id could hurt someone')
+        }
+    }
+}
+
 if (typeof params.help != 'undefined') {
-    console.log(`Run with [port] [cache]
-    [port] sets the Port number to listen on
-    [cache] sets how many seconds the browser should cache the site for`)
+    console.log(`Run with [port] [cache] [one-id]
+    [port] sets the Port number to listen on. Default 8888
+    [cache] sets how many seconds the browser should cache the site for. Default 3600
+    [one-id] sets whether or not the server sets all ids to "aaaa". Default false`)
     process.exit()
 }
 
@@ -53,7 +79,7 @@ io.on('connection', socket => {
     let userID: string
     let user: IUser
 
-    function logUserCount(id=userID){
+    function logUserCount(id = userID) {
         console.log(`ID ${id} has ${sockets[id].length} users`)
     }
 
@@ -148,10 +174,12 @@ io.on('connection', socket => {
 })
 
 function initUser(id?: string | null) {
-    if (id == null) {
+    if (typeof oneID == 'string') {
+        id = oneID
+    } else if (id == null) {
         id = getID()
     }
-    if ((typeof id === 'string') && /^[a-zA-Z0-9_-]{4}$/.test(id)) {
+    if ((typeof id === 'string') && /^[a-zA-Z0-9_-]{1,6}$/.test(id)) {
         if (typeof users[id] === 'undefined') {
             users[id] = { lastMessageAt: Date.now(), settings: {} }
         }
@@ -181,6 +209,11 @@ function getRandomStr64(len: number) {
     return res
 }
 
+/**
+ * Turns process.argv to an object
+ * @param names Names to be given to arguments with out any
+ * @param flags These arguments get turned to keys with empty string if seen
+ */
 function getParams(names: string[] = [], flags: string[] = []) {
     const nameless: string[] = []
     const res: IKeyVal<string> = {}
