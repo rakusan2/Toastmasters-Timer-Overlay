@@ -11,7 +11,7 @@ OBS will hide the background
 
 ### Usage:
 1. Download 
-    - [release version](https://github.com/rakusan2/Toastmasters-Timer-Overlay/releases/tag/v1.0.0)
+    - [release version](https://github.com/rakusan2/Toastmasters-Timer-Overlay/releases/)
     - [OBS Studio](https://obsproject.com/)
     - [OBS VirtualCam](https://obsproject.com/forum/resources/obs-virtualcam.539/)
 2. Run the Timer Overlay
