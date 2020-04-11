@@ -6,26 +6,26 @@ const params = getParams(['port', 'cache'], ['help'])
 let port = 8888
 let cache: number | boolean = 3600
 
-if (typeof params.named.port == 'string') {
-    let tempPort = +params.named.port
+if (typeof params.port == 'string') {
+    let tempPort = +params.port
     if (!Number.isNaN(tempPort)) {
         port = tempPort
     } else {
-        console.warn(`Invalid Port Number. Got ${params.named.port}`)
+        console.warn(`Invalid Port Number. Got ${params.port}`)
     }
 }
-if (typeof params.named.cache == 'string') {
-    let tempCache = params.named.cache
+if (typeof params.cache == 'string') {
+    let tempCache = params.cache
     if (tempCache.toLowerCase() === 'false') {
         cache = false
     } else if (!Number.isNaN(+tempCache)) {
         cache = +tempCache
     } else {
-        console.warn(`Invalid Cache Time. Got ${params.named.cache}`)
+        console.warn(`Invalid Cache Time. Got ${params.cache}`)
     }
 }
 
-if (typeof params.named.help != 'undefined') {
+if (typeof params.help != 'undefined') {
     console.log(`Run with [port] [cache]
     [port] sets the Port number to listen on
     [cache] sets how many seconds the browser should cache the site for`)
@@ -172,30 +172,28 @@ function getID() {
 
 function getParams(names: string[] = [], flags: string[] = []) {
     const nameless: string[] = []
-    const res: { named: IKeyVal<string>, extra: string[] } = { named: {}, extra: [] }
+    const res: IKeyVal<string> = { }
     process.argv.splice(2).map(a => {
         const named = a.match(/^([^=]*)=(.*)$/)
         if (named == null) {
             nameless.push(a)
         } else {
             const [, key, val] = named
-            res.named[key.toLowerCase()] = val
+            res[key.toLowerCase()] = val
         }
     })
     let namesIndex = 0
     nameless.forEach((val, i) => {
         const valLow = val.toLowerCase()
-        if (flags.includes(valLow) && typeof res.named[valLow] == 'undefined') {
-            res.named[valLow] = ''
+        if (flags.includes(valLow) && typeof res[valLow] == 'undefined') {
+            res[valLow] = ''
             return
         }
-        while (namesIndex < names.length && typeof res.named[names[namesIndex]] != 'undefined') {
+        while (namesIndex < names.length && typeof res[names[namesIndex]] != 'undefined') {
             namesIndex++
         }
         if (namesIndex < names.length) {
-            res.named[names[namesIndex]] = val
-        } else {
-            res.extra.push(val)
+            res[names[namesIndex]] = val
         }
     })
     return res
