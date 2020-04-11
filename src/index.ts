@@ -41,23 +41,27 @@ const web = http.createServer((req, res) => {
 })
 const io = socket(web)
 
-const users: { [id: number]: IUser } = {}
+const users: { [id: string]: IUser } = {}
 
-const sockets: IKeyNVal<socket.Socket[]> = {}
+const sockets: IKeyVal<socket.Socket[]> = {}
 
 web.listen(port, () => {
     console.log(`listening at http://localhost:${port} with cache set to ${cache}`)
 })
 
 io.on('connection', socket => {
-    let userID: number
+    let userID: string
     let user: IUser
 
+    function logUserCount(id=userID){
+        console.log(`ID ${id} has ${sockets[id].length} users`)
+    }
+
     function disconnect() {
-        if (typeof userID == 'number' && typeof sockets[userID] !== 'undefined') {
+        if (typeof userID == 'string' && typeof sockets[userID] !== 'undefined') {
             sockets[userID] = sockets[userID].filter(soc => soc != socket)
             console.log({ disconnect: { id: userID } })
-            console.log(`ID ${userID.toString(16)} has ${sockets[userID].length} users`)
+            logUserCount()
         }
     }
 
@@ -77,10 +81,10 @@ io.on('connection', socket => {
                 sockets[userID].push(socket)
             }
 
-            console.log(`ID ${userID.toString(16)} has ${sockets[userID].length} users`)
+            logUserCount()
 
             user.lastMessageAt = Date.now()
-            fn({ ok: true, id: userID, settings: user.settings })
+            fn({ ok: true, id: userID, settings: user.settings, serverTime: Date.now() })
         } catch (err) {
             console.log({ init: { err } })
             if (typeof 'string') {
@@ -143,24 +147,22 @@ io.on('connection', socket => {
     })
 })
 
-function initUser(id: any) {
-    if (typeof id === 'string') {
-        id = parseInt(id, 16)
-    } else if (id == null) {
+function initUser(id?: string | null) {
+    if (id == null) {
         id = getID()
     }
-    if (id > 0 && id < 0xffff && typeof users[id] === 'undefined') {
-        users[id] = { lastMessageAt: Date.now(), settings: {} }
-    }
-    if (typeof id === 'number' && !Number.isNaN(id) && typeof users[id] !== 'undefined') {
+    if ((typeof id === 'string') && /^[a-zA-Z0-9_-]{4}$/.test(id)) {
+        if (typeof users[id] === 'undefined') {
+            users[id] = { lastMessageAt: Date.now(), settings: {} }
+        }
         return id
     } else throw 'Invalid ID'
 }
 
 function getID() {
-    let id = 0, round = 0
+    let id = '', round = 0
     do {
-        id = Math.floor(Math.random() * 0xffff)
+        id = getRandomStr64(4)
         round++;
         if (round > 20) {
             throw 'Unable to Get ID'
@@ -169,10 +171,19 @@ function getID() {
     users[id] = { settings: {}, lastMessageAt: Date.now() }
     return id
 }
+const URL_BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+function getRandomStr64(len: number) {
+    let res = ''
+    for (let i = 0; i < len; i++) {
+        const index = Math.round(Math.random() * URL_BASE64.length)
+        res += URL_BASE64[index]
+    }
+    return res
+}
 
 function getParams(names: string[] = [], flags: string[] = []) {
     const nameless: string[] = []
-    const res: IKeyVal<string> = { }
+    const res: IKeyVal<string> = {}
     process.argv.splice(2).map(a => {
         const named = a.match(/^([^=]*)=(.*)$/)
         if (named == null) {
@@ -214,7 +225,8 @@ interface IResponseOK {
     ok: true
 }
 interface IResponseInit extends ISettings {
-    id: number
+    id: string,
+    serverTime: number
 }
 interface ISettings {
     settings: IKeyVal<ISetting>

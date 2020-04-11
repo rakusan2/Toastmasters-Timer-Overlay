@@ -38,7 +38,7 @@ const timeFormat = /(\d{1,2}):(\d{1,2})/
 
 const params = getParams()
 const isView = typeof params.view !== 'undefined'
-let id = params?.view || params?.id
+let id = params?.id
 
 let idSet = false
 
@@ -98,6 +98,11 @@ const defaultSettings: ISettingInput = {
     presetTime: 'TT'
 }
 
+let serverTimeOffset = 0
+Date.serverNow = function(){
+    return Date.now() - serverTimeOffset
+}
+
 controlBox.classList.toggle('hide', isView)
 urlControlBox.classList.toggle('hide', isView)
 
@@ -129,7 +134,7 @@ function timeCalc() {
     const red = minSecToMS(timeControl.red.value)
     const overtime = minSecToMS(timeControl.overtime.value)
 
-    const msElapsed = (timerStop < timerStart ? Date.now() : timerStop) - timerStart
+    const msElapsed = (timerStop < timerStart ? Date.serverNow() : timerStop) - timerStart
 
     if (msElapsed < green) {
         setBorder('white')
@@ -379,25 +384,26 @@ timeControl.overtime.onchange = function () {
 }
 
 urlId.onchange = function () {
-    const val = urlId.value.toLowerCase()
-    if (/^[0-9a-f]{1,4}$/.test(val)) {
+    const val = urlId.value.trim()
+    if (/^[0-9a-zA-Z-_]{1,4}$/.test(val)) {
         init(val)
+    }else{
+        urlId.value = id ?? ''
     }
 }
 
-
 buttons.startButton.onclick = function () {
     if (timeControl.timerStop > 0) {
-        const settings = { timerStart: timeControl.timerStart + (Date.now() - timeControl.timerStop), timerStop: 0 }
+        const settings = { timerStart: timeControl.timerStart + (Date.serverNow() - timeControl.timerStop), timerStop: 0 }
         setSettings(settings, true)
     } else if (timeControl.timerStart === 0) {
-        const settings = { timerStart: Date.now(), timerStop: 0 }
+        const settings = { timerStart: Date.serverNow(), timerStop: 0 }
         setSettings(settings, true)
     } else return
 }
 buttons.stopButton.onclick = function () {
     if (timeControl.timerStop === 0) {
-        setSetting('timerStop', Date.now(), true)
+        setSetting('timerStop', Date.serverNow(), true)
         timeCalc()
     }
 }
@@ -424,9 +430,10 @@ function init(clientID?: string | null) {
             console.log({ init: res })
             if (res.ok) {
                 const lastID = id
-                id = res.id.toString(16)
+                id = res.id
                 urlId.value = id
                 idSet = true
+                serverTimeOffset = Date.now() - res.serverTime
                 if (lastID != id) {
                     history.replaceState({ id }, document.title, `?${isView ? 'view&' : ''}id=${id}`)
                 }
@@ -490,7 +497,8 @@ interface IResponseOK {
     ok: true
 }
 interface IResponseInit extends ISettings {
-    id: number
+    id: string
+    serverTime: number
 }
 interface ISettings {
     settings: ISettingInput
@@ -521,4 +529,8 @@ interface ITimePreset {
     green: string
     yellow: string
     overtime: string
+}
+
+interface DateConstructor{
+    serverNow():number
 }
