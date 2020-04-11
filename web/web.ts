@@ -90,12 +90,12 @@ const timePresets = fixTimes({
 const defaultSettings: ISettingInput = {
     timerStart: 0,
     timerStop: 0,
-    timerGreen: '01:00',
-    timerYellow: '01:30',
-    timerRed: '02:00',
-    timerOvertime: '03:00',
+    timerGreen: '00:05',
+    timerYellow: '00:10',
+    timerRed: '00:15',
+    timerOvertime: '00:20',
     speakerName: '',
-    presetTime: 'tt'
+    presetTime: 'TT'
 }
 
 controlBox.classList.toggle('hide', isView)
@@ -361,21 +361,21 @@ function setTimeSections(sectTimes: ITimePreset) {
 
 timeControl.green.onchange = function () {
     const val = fixTime(timeControl.green.value)
-    setSettings({ timerGreen: val, presetTime: 'custom' }, true)
+    setSettings({ timerGreen: val, presetTime: 'Custom' }, true)
 }
 timeControl.red.onchange = function () {
     const val = fixTime(timeControl.red.value)
-    setSettings({ timerRed: val, presetTime: 'custom' }, true)
+    setSettings({ timerRed: val, presetTime: 'Custom' }, true)
 }
 
 timeControl.yellow.onchange = function () {
     const val = fixTime(timeControl.yellow.value)
-    setSettings({ timerYellow: val, presetTime: 'custom' }, true)
+    setSettings({ timerYellow: val, presetTime: 'Custom' }, true)
 }
 
 timeControl.overtime.onchange = function () {
     const val = fixTime(timeControl.overtime.value)
-    setSettings({ timerOvertime: val, presetTime: 'custom' }, true)
+    setSettings({ timerOvertime: val, presetTime: 'Custom' }, true)
 }
 
 urlId.onchange = function () {
