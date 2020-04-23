@@ -1,8 +1,14 @@
 const HOST = 'localhost:8888'
 const socket = io()
+const selectorTemplate = document.getElementById('timeSelections') as HTMLTemplateElement
+const controlHead = document.getElementById('controlHead') as HTMLDivElement
 const controlBox = document.getElementById('controls') as HTMLDivElement
 const urlControlBox = document.getElementById('urlControl') as HTMLDivElement
-const selector = document.getElementById('timeSelection') as HTMLSelectElement
+const dropdownControl = document.getElementById('dropdown-control') as HTMLDivElement
+const dropdownArrow = document.getElementById('dropdown-arrow') as HTMLDivElement
+const dropdownAdd = document.getElementById('dropdown-add') as HTMLDivElement
+const dropdownUsers = document.getElementById('dropdown-users') as HTMLDivElement
+const selector = (<DocumentFragment>selectorTemplate.content.cloneNode(true)).firstElementChild as HTMLSelectElement
 const urlId = document.getElementById('urlId') as HTMLInputElement
 const speakerName = document.getElementById('SpeakerName') as HTMLInputElement
 const readout = document.getElementById('timeReadout')?.firstChild as Text
@@ -39,9 +45,10 @@ const timeFormat = /(\d{1,2}):(\d{1,2})/
 const params = getParams()
 const isView = typeof params.view !== 'undefined'
 let id = params?.id
+let speakers: ISpeaker[] = []
 
 let idSet = false
-let colourOverride: 'red' | 'yellow' | 'green' | '' = ''
+let colourOverride: 'red' | 'yellow' | 'green' | 'white' | '' = ''
 
 const timePresets = fixTimes({
     'TT': {
@@ -104,8 +111,64 @@ Date.serverNow = function() {
     return Date.now() - serverTimeOffset
 }
 
+if (!isView) {
+    controlHead.prepend(selector)
+}
+
 controlBox.classList.toggle('hide', isView)
 urlControlBox.classList.toggle('hide', isView)
+dropdownControl.classList.toggle('hide', isView)
+
+function getPresetTxt(preset: number | string) {
+    // TODO
+    return ''
+}
+
+function getPresetKey(preset: number | string) {
+    // TODO
+    return ''
+}
+
+function createSpeaker(name = '', preset: string | number = 0, time = ''): ISpeaker {
+    const speakerDiv = document.createElement('div')
+    const topDiv = document.createElement('div')
+    const nameDiv = document.createElement('div')
+    const timeDiv = document.createElement('div')
+    const presetDiv = document.createElement('div')
+    const nameTxt = document.createTextNode(name)
+    const timeTxt = document.createTextNode(time)
+    let sel: Text | HTMLSelectElement
+
+    nameDiv.classList.add('speaker-name')
+    nameDiv.appendChild(nameTxt)
+
+    timeDiv.classList.add('speaker-time')
+    timeDiv.appendChild(timeTxt)
+
+    topDiv.classList.add('speaker-top')
+    topDiv.append(nameDiv, timeDiv)
+
+    presetDiv.classList.add('speaker-preset')
+
+    if (isView) {
+        sel = document.createTextNode(getPresetTxt(preset))
+        presetDiv.appendChild(sel)
+    } else {
+        sel = (<DocumentFragment>selectorTemplate.content.cloneNode(true)).firstElementChild as HTMLSelectElement
+        sel.value = getPresetKey(preset)
+        presetDiv.append(sel)
+    }
+
+    speakerDiv.classList.add('speaker')
+    speakerDiv.append(topDiv, presetDiv)
+
+    return {
+        speakerDiv,
+        name: nameTxt,
+        time: timeTxt,
+        preset: sel
+    }
+}
 
 function selectPreselect(val: any) {
     if (typeof val === 'number' && val > 0 && val < selector.options.length) {
@@ -306,6 +369,27 @@ const setFns: ISettingControl = {
         if (val === 'green' || val === 'yellow' || val === 'red' || val === '') {
             colourOverride = val
             return true
+        }
+        return false
+    },
+    addSpeaker(val) {
+        if (val == null) return false
+        if (Array.isArray(val)) {
+            const ret = val.reduce((acc, a) => acc || (this.addSpeaker(a) ?? false), false)
+            return ret
+        } else if (typeof val == 'object') {
+            let name = '', time = '', preset: number | string = 0
+            if (typeof val.name == 'string') {
+                name = val.name
+            }
+            if ((typeof val.time == 'string') || (typeof val.time == 'number')) {
+                time = fixTime(val.time)
+            }
+            if ((typeof val.preset == 'string') || (typeof val.preset == 'number')) {
+                preset = val.preset
+            }
+            const speaker = createSpeaker(name, preset, time)
+            
         }
         return false
     }
@@ -611,8 +695,11 @@ interface ISettingInput {
     speakerName?: string
     presetTime?: number | string
     colorOverride?: string
+    addSpeaker?: IMayArr<{ name?: string, time?: string | number, preset?: number | string }>
     [key: string]: any
 }
+
+type IMayArr<T> = T | T[]
 
 type ISettingControl = Required<{
     [P in keyof ISettingInput]: IFn<ISettingInput[P], boolean | undefined>
@@ -627,4 +714,11 @@ interface ITimePreset {
 
 interface DateConstructor {
     serverNow(): number
+}
+
+interface ISpeaker {
+    speakerDiv: HTMLDivElement
+    name: Text
+    time: Text
+    preset: Text | HTMLSelectElement
 }

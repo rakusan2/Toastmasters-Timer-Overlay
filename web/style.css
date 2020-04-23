@@ -3,27 +3,42 @@ html, body {
     padding: 0;
     height: 100%;
     text-align: center;
+    font-family: 'Noto Sans TC', 'Open Sans';
 }
-body{
+
+body {
     background-color: rgb(255, 255, 255);
 }
 
-.red-bg{
+.red-bg {
     background-color: red;
 }
 
-.yellow-bg{
+.yellow-bg {
     background-color: yellow;
 }
 
-.green-bg{
+.green-bg {
     background-color: green;
 }
+
+.red-tx {
+    color: red;
+}
+
+.yellow-tx {
+    color: yellow;
+}
+
+.green-tx {
+    color: green;
+}
+
 .border {
     position: fixed;
     margin: 0;
     overflow: hidden;
-    z-index: 1000;
+    z-index: 100;
 }
 
 #left, #right {
@@ -53,33 +68,128 @@ body{
 #bottom {
     bottom: 0;
 }
-#urlControl>input{
+
+#urlControl>input {
     width: 4em;
 }
-#urlId{
+
+#urlId {
     background-color: rgb(214, 214, 214);
     border: none;
     text-decoration: underline;
 }
-#urlControl{
-    padding: 5px;
+
+.control {
     border: 2px solid #5b85f8;
+    background-color: rgb(214, 214, 214);
+}
+
+#dropdown {
+    width: 400px;
+    position: fixed;
+    right: 50px;
+    top: 0;
+    font-size: 24px;
+    z-index: 200;
+}
+
+.speaker-time {
+    font-weight: bold;
+}
+
+.speaker {
+    padding: 5px;
+}
+
+.speaker:not(:first-child) {
+    border-top: 1px solid black;
+}
+
+.speaker-top {
+    display: flex;
+}
+
+.speaker-preset {
+    text-align: left;
+    margin-top: 5px
+}
+
+.speaker-name {
+    text-align: left;
+    width: 100%;
+    font-weight: bold;
+}
+
+.speaker-name input {
+    background: none;
+    border: none;
+    font-weight: bold;
+    font-size: 24px;
+    font-family: 'Noto Sans TC', 'Open Sans';
+}
+
+.speaker-time {
+    text-align: right;
+}
+
+img.up {
+    transform: rotate(180deg);
+}
+
+img.right {
+    transform: rotate(-90deg);
+}
+
+img.rotate45 {
+    transform: rotate(45deg);
+}
+
+.speaker.selected {
+    background-color: darkgrey;
+}
+
+.speaker:hover:not(.selected) {
+    background-color: rgb(180, 180, 180);
+}
+
+#dropdown-control{
+    display: flex;
+    border-top: 2px solid black;
+}
+
+#dropdown-control>div {
+    width: 100%;
+    padding: 10px 10px 5px 10px;
+}
+
+#dropdown-control>div:hover {
+    background-color: rgb(180, 180, 180);
+}
+
+#dropdown-add {
+    border-right: 1px solid black;
+    border-left: 1px solid black;
+}
+
+#urlControl {
+    padding: 5px;
     position: relative;
     width: 30em;
     top: 10%;
     left: 50%;
     transform: translate(-50%, 0);
-    background-color: rgb(214, 214, 214);
 }
 
 #controls {
-    border: 2px solid #5b85f8;
     position: relative;
     width: 30em;
     top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgb(214, 214, 214);
+}
+
+.top-red {
+    border-top: 2px solid red;
 }
 
 #controls>div {
@@ -87,32 +197,38 @@ body{
     margin: 5px 0;
 }
 
-#timeSelection {
+.timeSelection {
     width: 15em;
 }
 
 #timeReadout {
     font-size: 30px;
 }
-#timeSettings>input{
-    width:4em;
+
+#timeSettings>input {
+    width: 4em;
 }
-#controlButtons>button{
-    width:5em;
+
+#controlButtons>button {
+    width: 5em;
 }
-#GreenTime{
+
+#GreenTime {
     background-color: rgba(0, 255, 0, 0.5);
 }
-#YellowTime{
+
+#YellowTime {
     background-color: rgba(255, 255, 0, 0.5);
 }
-#RedTime{
+
+#RedTime {
     background-color: rgba(255, 0, 0, 0.5);
 }
-#OverTime{
+
+#OverTime {
     background-color: rgb(255, 0, 0);
 }
 
-.hide{
-    display: none;
+.hide {
+    display: none !important;
 }
