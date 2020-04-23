@@ -110,7 +110,7 @@ io.on('connection', socket => {
             logUserCount()
 
             user.lastMessageAt = Date.now()
-            fn({ ok: true, id: userID, settings: user.settings, serverTime: Date.now() })
+            fn({ ok: true, id: userID, settings: user.settings, serverTime: Date.now(), idLock: oneID != null })
         } catch (err) {
             console.log({ init: { err } })
             if (typeof 'string') {
@@ -258,7 +258,8 @@ interface IResponseOK {
     ok: true
 }
 interface IResponseInit extends ISettings {
-    id: string,
+    id: string
+    idLock: boolean
     serverTime: number
 }
 interface ISettings {

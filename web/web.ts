@@ -41,6 +41,7 @@ const isView = typeof params.view !== 'undefined'
 let id = params?.id
 
 let idSet = false
+let colourOverride: 'red' | 'yellow' | 'green' | '' = ''
 
 const timePresets = fixTimes({
     'TT': {
@@ -99,7 +100,7 @@ const defaultSettings: ISettingInput = {
 }
 
 let serverTimeOffset = 0
-Date.serverNow = function(){
+Date.serverNow = function() {
     return Date.now() - serverTimeOffset
 }
 
@@ -145,7 +146,7 @@ function timeCalc() {
     } else if (msElapsed < overtime) {
         setBorder('red')
     } else {
-        setBorder((msElapsed - overtime) % 1000 < 500 ? 'white' : 'red')
+        setBorder((msElapsed - overtime) % 1000 >= 500 ? 'white' : 'red')
     }
 
     const secElapsed = Math.floor(msElapsed / 1000)
@@ -163,6 +164,35 @@ function timeCalc() {
     }
 
 }
+
+function onKeyChange(changedKey: string, keys: IKeyVal<boolean>, isRepeat: boolean) {
+    if (!isRepeat) {
+        if (keys['R'] || keys['3']) {
+            setSetting('colorOverride', 'red', true)
+        } else if (keys['Y'] || keys['2']) {
+            setSetting('colorOverride', 'yellow', true)
+        } else if (keys['G'] || keys['1']) {
+            setSetting('colorOverride', 'green', true)
+        } else {
+            setSetting('colorOverride', '', true)
+        }
+        timeCalc()
+
+        if (keys['K']) {
+            if (timeControl.timerStart > 0) {
+                if (timeControl.timerStop > 0) {
+                    resumeTime()
+                } else {
+                    pauseTime()
+                }
+            } else {
+                startTime()
+            }
+        }
+    }
+    return false
+}
+
 let reDrawInProgress = false
 function requestNextFrame() {
     if (!reDrawInProgress) {
@@ -178,7 +208,10 @@ function digitNumber(num: number, count: number) {
     return num.toFixed(0).padStart(count, '0')
 }
 
-function setBorder(colour: 'red' | 'yellow' | 'green' | 'white') {
+function setBorder(colour: 'red' | 'yellow' | 'green' | 'white' = 'white') {
+    if (colourOverride != '') {
+        colour = colourOverride
+    }
     if (colour === 'white') {
         setBorderClass('border')
     } else {
@@ -268,6 +301,13 @@ const setFns: ISettingControl = {
     },
     presetTime(val) {
         return selectPreselect(val)
+    },
+    colorOverride(val) {
+        if (val === 'green' || val === 'yellow' || val === 'red' || val === '') {
+            colourOverride = val
+            return true
+        }
+        return false
     }
 }
 
@@ -287,7 +327,7 @@ function getParams() {
 console.log({ params, isView })
 
 
-buttons.linkCopyButton.onclick = function () {
+buttons.linkCopyButton.onclick = function() {
     navigator?.permissions?.query?.({ name: 'clipboard-write' } as any)
         .then(res => {
             if (res.state === 'granted' || res.state === 'prompt') {
@@ -364,53 +404,100 @@ function setTimeSections(sectTimes: ITimePreset) {
     overtime.value = sectTimes.overtime
 }
 
-timeControl.green.onchange = function () {
+timeControl.green.onchange = function() {
     const val = fixTime(timeControl.green.value)
     setSettings({ timerGreen: val, presetTime: 'Custom' }, true)
 }
-timeControl.red.onchange = function () {
+timeControl.red.onchange = function() {
     const val = fixTime(timeControl.red.value)
     setSettings({ timerRed: val, presetTime: 'Custom' }, true)
 }
 
-timeControl.yellow.onchange = function () {
+timeControl.yellow.onchange = function() {
     const val = fixTime(timeControl.yellow.value)
     setSettings({ timerYellow: val, presetTime: 'Custom' }, true)
 }
 
-timeControl.overtime.onchange = function () {
+timeControl.overtime.onchange = function() {
     const val = fixTime(timeControl.overtime.value)
     setSettings({ timerOvertime: val, presetTime: 'Custom' }, true)
 }
 
-urlId.onchange = function () {
+urlId.onchange = function() {
     const val = urlId.value.trim()
     if (/^[0-9a-zA-Z-_]{1,4}$/.test(val)) {
         init(val)
-    }else{
+    } else {
         urlId.value = id ?? ''
     }
 }
 
-buttons.startButton.onclick = function () {
+speakerName.onchange = function() {
+    const val = speakerName.value.trim()
+    sendSettings({ speakerName: val })
+}
+
+
+function startTime() {
+    setSettings({ timerStart: Date.serverNow(), timerStop: 0 }, true)
+}
+function pauseTime() {
+    setSettings({ timerStop: Date.serverNow() }, true)
+}
+function resumeTime() {
+    const shift = Date.serverNow() - timeControl.timerStop
+    setSettings({ timerStart: timeControl.timerStart + shift, timerStop: 0 }, true)
+}
+function resetTime() {
+    setSettings({ timerStart: 0, timerStop: 0 }, true)
+}
+
+
+
+buttons.startButton.onclick = function() {
     if (timeControl.timerStop > 0) {
-        const settings = { timerStart: timeControl.timerStart + (Date.serverNow() - timeControl.timerStop), timerStop: 0 }
-        setSettings(settings, true)
+        resumeTime()
     } else if (timeControl.timerStart === 0) {
-        const settings = { timerStart: Date.serverNow(), timerStop: 0 }
-        setSettings(settings, true)
+        startTime()
     } else return
 }
-buttons.stopButton.onclick = function () {
+buttons.stopButton.onclick = function() {
     if (timeControl.timerStop === 0) {
-        setSetting('timerStop', Date.serverNow(), true)
-        timeCalc()
+        pauseTime()
     }
 }
-buttons.resetButton.onclick = function () {
-    const settings = { timerStart: 0, timerStop: 0 }
-    setSettings(settings, true)
+buttons.resetButton.onclick = function() {
+    resetTime()
 }
+
+const keys: IKeyVal<boolean> = {}
+
+document.onkeydown = function(ev) {
+    const key = ev.key.toUpperCase()
+    keys[key] = true
+    if (onKeyChange(key, keys, ev.repeat)) {
+        ev.preventDefault()
+    }
+}
+document.onkeyup = function(ev) {
+    const key = ev.key.toUpperCase()
+    keys[key] = false
+    if (onKeyChange(key, keys, ev.repeat)) {
+        ev.preventDefault()
+    }
+}
+
+function stopKeyPropagation(el: HTMLElement) {
+    el.onkeydown = ev => ev.stopPropagation()
+    el.onkeyup = ev => ev.stopPropagation()
+}
+
+stopKeyPropagation(urlId)
+stopKeyPropagation(speakerName)
+stopKeyPropagation(timeControl.green)
+stopKeyPropagation(timeControl.yellow)
+stopKeyPropagation(timeControl.red)
+stopKeyPropagation(timeControl.overtime)
 
 socket.on('connect', () => {
     init(id)
@@ -429,6 +516,11 @@ function init(clientID?: string | null) {
         socket.emit('init', clientID, (res: IResponse<IResponseInit>) => {
             console.log({ init: res })
             if (res.ok) {
+                if (res.idLock) {
+                    urlId.disabled = true
+                } else {
+                    urlId.disabled = false
+                }
                 const lastID = id
                 id = res.id
                 urlId.value = id
@@ -498,6 +590,7 @@ interface IResponseOK {
 }
 interface IResponseInit extends ISettings {
     id: string
+    idLock: boolean
     serverTime: number
 }
 interface ISettings {
@@ -517,6 +610,7 @@ interface ISettingInput {
     timerOvertime?: number | string
     speakerName?: string
     presetTime?: number | string
+    colorOverride?: string
     [key: string]: any
 }
 
@@ -531,6 +625,6 @@ interface ITimePreset {
     overtime: string
 }
 
-interface DateConstructor{
-    serverNow():number
+interface DateConstructor {
+    serverNow(): number
 }
