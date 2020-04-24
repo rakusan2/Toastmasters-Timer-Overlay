@@ -230,15 +230,19 @@ function timeCalc() {
 
 function onKeyChange(changedKey: string, keys: IKeyVal<boolean>, isRepeat: boolean) {
     if (!isRepeat) {
+        let tempColorOverride = ''
         if (keys['R'] || keys['3']) {
-            setSetting('colorOverride', 'red', true)
+            tempColorOverride= 'red'
         } else if (keys['Y'] || keys['2']) {
-            setSetting('colorOverride', 'yellow', true)
+            tempColorOverride= 'yellow'
         } else if (keys['G'] || keys['1']) {
-            setSetting('colorOverride', 'green', true)
-        } else {
-            setSetting('colorOverride', '', true)
+            tempColorOverride= 'green'
         }
+
+        if(colourOverride != tempColorOverride){
+            setSetting('colorOverride', tempColorOverride, true)
+        }
+
         timeCalc()
 
         if (keys['K']) {
@@ -389,7 +393,7 @@ const setFns: ISettingControl = {
                 preset = val.preset
             }
             const speaker = createSpeaker(name, preset, time)
-            
+
         }
         return false
     }
@@ -539,14 +543,14 @@ function resetTime() {
 
 
 buttons.startButton.onclick = function() {
-    if (timeControl.timerStop > 0) {
+    if (timeControl.timerStart > 0 && timeControl.timerStop > 0) {
         resumeTime()
     } else if (timeControl.timerStart === 0) {
         startTime()
     } else return
 }
 buttons.stopButton.onclick = function() {
-    if (timeControl.timerStop === 0) {
+    if (timeControl.timerStart > 0 && timeControl.timerStop === 0) {
         pauseTime()
     }
 }
