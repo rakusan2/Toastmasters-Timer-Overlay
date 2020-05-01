@@ -1,13 +1,14 @@
 import * as http from 'http'
 import * as socket from 'socket.io'
 import * as nodeStatic from 'node-static'
+import * as open from 'open'
 
-const params = getParams(['port', 'cache', 'one-id'], ['help', 'one-id'])
+const params = getParams(['port', 'cache', 'one-id', 'open'], ['help', 'one-id', 'open'])
 let port = 8888
 let cache: number | boolean = 3600
 let oneID: string | null = null
 
-if (typeof params.port == 'string') {
+if ('port' in params) {
     let tempPort = +params.port
     if (!Number.isNaN(tempPort)) {
         port = tempPort
@@ -15,7 +16,7 @@ if (typeof params.port == 'string') {
         console.warn(`Invalid Port Number. Got ${params.port}`)
     }
 }
-if (typeof params.cache == 'string') {
+if ('cache' in params) {
     let tempCache = params.cache
     if (tempCache.toLowerCase() === 'false') {
         cache = false
@@ -26,7 +27,7 @@ if (typeof params.cache == 'string') {
     }
 }
 
-if (typeof params['one-id'] != 'undefined') {
+if ('one-id' in params) {
     const val = params['one-id'].toLowerCase()
     if (val == '') {
         oneID = 'aaaa'
@@ -52,9 +53,10 @@ if (typeof params['one-id'] != 'undefined') {
 
 if (typeof params.help != 'undefined') {
     console.log(`Run with [port] [cache] [one-id]
-    [port] sets the Port number to listen on. Default 8888
-    [cache] sets how many seconds the browser should cache the site for. Default 3600
-    [one-id] sets whether or not the server sets all ids to "aaaa". Default false`)
+    [port] sets the Port number to listen on. Default 8888. Parameter is required.
+    [cache] sets how many seconds the browser should cache the site for. Default 3600. Parameter is required.
+    [one-id] sets whether or not the server sets all ids to "aaaa". Default false
+    [open] Opens browser window`)
     process.exit()
 }
 
@@ -72,7 +74,17 @@ const users: { [id: string]: IUser } = {}
 const sockets: IKeyVal<socket.Socket[]> = {}
 
 web.listen(port, () => {
-    console.log(`listening at http://localhost:${port} with cache set to ${cache}`)
+    const address = `http://localhost:${port}`
+    console.log(`listening at ${address} with cache set to ${cache}`)
+
+    if ('open' in params) {
+        const openVal = params.open
+        if (openVal != '') {
+            open(address, { app: openVal })
+        } else {
+            open(address)
+        }
+    }
 })
 
 io.on('connection', socket => {

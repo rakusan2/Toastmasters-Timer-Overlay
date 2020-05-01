@@ -50,7 +50,8 @@ OBS will hide the background
 ### Arguments
 - **Port** [number] The port to listen on
 - **Cache** [number or false] How long the client should cache the page for
-- **One-Id** [string or boolean] Forces all ids to be the passed string or the string `aaaa` if true or nothing is passed
+- **One-Id** [string, boolean on nothing] Forces all ids to be the passed string or the string `aaaa` if true or nothing is passed
+- **Open** [string or Nothing] Opens a browser window with optional parameter being the browser to open with
 
 The arguments `port=80 cache=false one-id=true`
 
