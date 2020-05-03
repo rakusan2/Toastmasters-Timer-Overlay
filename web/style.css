@@ -41,31 +41,31 @@ body {
     z-index: 100;
 }
 
-#left, #right {
+#left-border, #right-border {
     top: 0;
     bottom: 0;
     width: 40px;
 }
 
-#left {
+#left-border {
     left: 0;
 }
 
-#right {
+#right-border {
     right: 0;
 }
 
-#top, #bottom {
+#top-border, #bottom-border {
     left: 0;
     right: 0;
     height: 40px;
 }
 
-#top {
+#top-border {
     top: 0;
 }
 
-#bottom {
+#bottom-border {
     bottom: 0;
 }
 
@@ -152,7 +152,7 @@ img.rotate45 {
     background-color: rgb(180, 180, 180);
 }
 
-#dropdown-control{
+#dropdown-control {
     display: flex;
     border-top: 2px solid black;
 }

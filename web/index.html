@@ -8,7 +8,7 @@
 </head>
 
 <body>
-    <template id="timeSelections">
+    <template id="timeSelectionTemplate">
         <select class="timeSelection">
             <option value="TT">Table Topic (1-2min)</option>
             <option value="IceBr">IceBreaker (4-6Min)</option>
@@ -20,11 +20,11 @@
             <option value="Custom">Custom</option>
         </select>
     </template>
-    <div id="left" class="border"></div>
-    <div id="right" class="border"></div>
-    <div id="top" class="border"></div>
-    <div id="bottom" class="border"></div>
-    <div id="urlControl" class="control">localhost:8800?view&amp;id=<input type="text" id="urlId">
+    <div id="left-border" class="border"></div>
+    <div id="right-border" class="border"></div>
+    <div id="top-border" class="border"></div>
+    <div id="bottom-border" class="border"></div>
+    <div id="urlControl-border" class="control">localhost:8800?view&amp;id=<input type="text" id="urlId">
         <button id="copyLink">Copy Link</button>
     </div>
     <div id="controls" class="control" draggable="false">
@@ -40,7 +40,6 @@
         </div>
         <div id="controlButtons">
             <button id="timerStart">Start</button>
-            <button id="timerStop">Stop</button>
             <button id="timerReset">Reset</button>
             <button id="timerNext">Next</button>
         </div>
