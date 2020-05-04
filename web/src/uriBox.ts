@@ -1,10 +1,11 @@
 import { HidableControl } from './control';
-import { getFirstElementByClassName, getElementByID } from './util';
+import { getElementByID } from './util';
 import { HOST } from './constants';
 
-export class URIBox extends HidableControl {
+class URIBox extends HidableControl {
     idDiv: HTMLInputElement
     copyButton: HTMLButtonElement
+
     constructor(val: string | HTMLDivElement) {
         super(val)
         this.idDiv = getElementByID('urlId', 'input')
@@ -20,4 +21,9 @@ export class URIBox extends HidableControl {
     setID(val: string) {
         this.idDiv.value = val
     }
+    lock(val = true) {
+
+    }
 }
+
+export default new URIBox('urlControl')

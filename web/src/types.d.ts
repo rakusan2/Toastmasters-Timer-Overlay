@@ -17,15 +17,21 @@ export interface IResponseInit extends ISettings {
     idLock: boolean
     serverTime: number
 }
+export interface IResponseSet {
+    keysNotSet: string[]
+}
 export interface ISettings {
     settings: ISettingInput
 }
 export type IKeyVal<T> = { [key: string]: T }
-export type ISetting = string | number | boolean
+export type ISettingSimple = IMayArr<string> | IMayArr<number> | IMayArr<boolean> | undefined
+export type ISetting = ISettingSimple | IMayArr<IKeyVal<ISettingSimple>>
 export type IFn<T, K = any> = (val: T) => K
 export type IBadTimeInput = string | number | null | undefined
 
-export interface ISettingInput {
+export type ISettingInput = ISettingInputKnown & IKeyVal<ISetting>
+
+export interface ISettingInputKnown {
     timerStart?: number
     timerStop?: number
     timerGreen?: number | string
@@ -35,9 +41,10 @@ export interface ISettingInput {
     speakerName?: string
     presetTime?: number | string
     colorOverride?: string
-    addSpeaker?: IMayArr<{ name?: string, time?: string | number, preset?: number | string }>
-    [key: string]: any
+    speakers?: IMayArr<{ name?: string, time?: string | number, preset?: number | string }>
 }
+
+export type ISettingKeys = keyof ISettingInputKnown
 
 export type IMayArr<T> = T | T[]
 
@@ -52,10 +59,14 @@ export interface ITimePreset {
     overtime: string
 }
 
-declare global{
+export type ITimePresetMs = {
+    [P in keyof ITimePreset]: number
+}
+
+declare global {
     interface DateConstructor {
         serverNow(): number
-}
+    }
 }
 
 export interface ISpeaker {
@@ -63,6 +74,12 @@ export interface ISpeaker {
     name: Text
     time: Text
     preset: Text | HTMLSelectElement
+}
+
+export interface ISocketResponse {
+    init: IResponse<IResponseInit>
+    set: IResponse<IResponseSet>
+    get: IResponse<ISettings>
 }
 
 export type ISettableColours = 'white' | 'green' | 'yellow' | 'red'

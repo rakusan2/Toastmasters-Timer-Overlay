@@ -1,4 +1,5 @@
 node_modules/
 pkg/
 *.js
+*.js.map
 !webpack.config.js

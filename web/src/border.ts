@@ -1,40 +1,50 @@
-let border = new Border([borderDivCollection.bottom])
-function setBorder(colour: ISettableColours = 'white') {
-    if (colourOverride != '') {
-        colour = colourOverride
-    }
-
-}
-
-function setBorderClass(name: string) {
-    const lastName = border.top.className.trim()
-    const newName = name.trim()
-
-    if (lastName === newName) return
-
-    border.top.className = newName
-    border.bottom.className = newName
-    border.left.className = newName
-    border.right.className = newName
-}
+import { getElementByID, isSettableColor } from './util'
+import { ISettableColours } from './types'
+import { setting } from './settings'
 
 class Border {
     private currentColour: ISettableColours = 'white'
-    constructor(public pieces: HTMLElement[]) { }
+    private currentSetColor: ISettableColours = 'white'
+    private overrideColour: ISettableColours | '' = ''
+    elements: HTMLElement[]
 
-    set colour(colour: ISettableColours) {
-        if (colour != this.currentColour) {
-            let tempClassName = 'border'
+    constructor(elements: (HTMLElement | string)[]) {
+        this.elements = elements.map(el => (typeof el === 'string') ? getElementByID(el) : el)
+    }
 
-            this.currentColour = colour
-
-            if (colour != 'white') {
-                tempClassName += ` ${colour}-bg`
-            }
-            this.pieces.forEach(div => div.className = tempClassName)
-        }
+    set colour(val: ISettableColours) {
+        this.currentSetColor = val
+        this.refresh()
     }
     get colour() {
         return this.currentColour
     }
+
+    refresh() {
+        const val = this.overrideColour != '' ? this.overrideColour : this.currentSetColor
+
+        if (this.currentColour == val) {
+            return
+        }
+
+        let className = 'border'
+
+        if (val != 'white') {
+            className += ` ${val}-bg`
+        }
+
+        this.elements.forEach(el => el.className = className)
+        this.currentColour = val
+
+    }
+
+    @setting('colorOverride')
+    onOverride(val: string) {
+        if (isSettableColor(val) || val === '') {
+            this.overrideColour = val
+            this.refresh()
+        }
+    }
 }
+
+export default new Border(['left-border', 'right-border', 'top-border', 'bottom-border'])

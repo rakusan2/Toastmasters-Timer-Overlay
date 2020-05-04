@@ -1,7 +1,13 @@
-import { fixTimeMap } from './util'
-import { ISettingInput } from './types'
+import { onSetting } from './settings'
+import { fixTimeMap, fixTime } from './util'
+import { ITimePreset } from './types'
 
-export const HOST = new URL(window.location.href).host
+export const customPreset: ITimePreset = {
+    green: '00:05',
+    yellow: '00:10',
+    red: '00:15',
+    overtime: '00:20'
+}
 
 export const timePresets = fixTimeMap({
     'TT': {
@@ -48,21 +54,41 @@ export const timePresets = fixTimeMap({
     }
 })
 
+onSetting('timerGreen', (val) => {
+    const time = fixTime(val, null)
+    if (time != null) {
+        customPreset.green = time
+    }
+})
+
+onSetting('timerYellow', (val) => {
+    const time = fixTime(val, null)
+    if (time != null) {
+        customPreset.yellow = time
+    }
+})
+
+onSetting('timerRed', (val) => {
+    const time = fixTime(val, null)
+    if (time != null) {
+        customPreset.red = time
+    }
+})
+
+onSetting('timerOvertime', (val) => {
+    const time = fixTime(val, null)
+    if (time != null) {
+        customPreset.overtime = time
+    }
+})
+
 export function getTimeIntervals(key: string) {
+    if (key === 'Custom') {
+        return customPreset
+    }
     if (key in timePresets) {
         return timePresets[key]
     } else {
         return null
     }
 }
-
-export const defaultSettings: ISettingInput = Object.freeze({
-    timerStart: 0,
-    timerStop: 0,
-    timerGreen: '00:05',
-    timerYellow: '00:10',
-    timerRed: '00:15',
-    timerOvertime: '00:20',
-    speakerName: '',
-    presetTime: 'TT'
-})

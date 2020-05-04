@@ -11,6 +11,16 @@
                 "$tsc-watch"
             ],
             "group": "build"
+        },
+        {
+            "label": "webpack Watch",
+            "type": "process",
+            "command": "npx webpack",
+            "isBackground": true,
+            "args": [
+                "--watch",
+                "--mode=development"
+            ]
         }
     ]
 }
