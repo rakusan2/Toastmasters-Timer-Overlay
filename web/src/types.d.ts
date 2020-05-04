@@ -83,3 +83,4 @@ export interface ISocketResponse {
 }
 
 export type ISettableColours = 'white' | 'green' | 'yellow' | 'red'
+export type IMethodDecorator<T> = (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;

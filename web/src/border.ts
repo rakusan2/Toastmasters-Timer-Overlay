@@ -1,6 +1,6 @@
 import { getElementByID, isSettableColor } from './util'
 import { ISettableColours } from './types'
-import { setting } from './settings'
+import { onSetting } from './settings'
 
 class Border {
     private currentColour: ISettableColours = 'white'
@@ -38,13 +38,13 @@ class Border {
 
     }
 
-    @setting('colorOverride')
-    onOverride(val: string) {
+
+    onOverride = onSetting('colorOverride', (val) => {
         if (isSettableColor(val) || val === '') {
             this.overrideColour = val
             this.refresh()
         }
-    }
+    })
 }
 
 export default new Border(['left-border', 'right-border', 'top-border', 'bottom-border'])

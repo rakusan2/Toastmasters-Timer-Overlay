@@ -1,4 +1,4 @@
-import { IKeyVal, IResponseSet, ISettingInput, ISettingKeys, IMayArr } from './types'
+import { IKeyVal, IResponseSet, ISettingInput, ISettingKeys, IMayArr, IMethodDecorator } from './types'
 import { send } from './socket'
 import { defaultSettings } from './constants'
 
@@ -27,7 +27,7 @@ export function onSetting(keys: IMayArr<ISettingKeys>, fun: (val: any, key: stri
     return fun
 }
 
-export function setting(keys: IMayArr<ISettingKeys>): MethodDecorator {
+export function _setting(keys: IMayArr<ISettingKeys>): IMethodDecorator<(val: any, key?: string) => any> {
 
     function addFun(key: ISettingKeys, fun: (val: any, key: string) => any) {
         if (typeof settings[key] == 'undefined') {
@@ -37,26 +37,44 @@ export function setting(keys: IMayArr<ISettingKeys>): MethodDecorator {
         }
     }
 
-    return function(this: any, _target, _key, descriptor) {
+    return function(this: any, _target, decKey, descriptor) {
 
         // TODO Test this
-        debugger;
         if (descriptor.value != null) {
-            const fun = (<unknown>descriptor.value as (val: any, key?: string) => any).bind(this)
 
-            if (Array.isArray(keys)) {
-                keys.forEach(key => {
-                    addFun(key, fun)
+            const value = descriptor.value
+
+            delete descriptor.value
+            delete descriptor.writable
+            descriptor.get = function() {
+                debugger
+                const fun = value.bind(this)
+
+                Object.defineProperty(this, decKey, {
+                    enumerable: descriptor.enumerable,
+                    configurable: descriptor.configurable,
+                    value: fun
                 })
-            } else {
-                addFun(keys, fun)
+
+                if (Array.isArray(keys)) {
+                    keys.forEach(key => {
+                        addFun(key, fun)
+                    })
+                } else {
+                    addFun(keys, fun)
+                }
+                return this[name]
             }
+
+
         }
 
     }
 }
 
-export function afterSetting(keys?: IMayArr<ISettingKeys>): MethodDecorator {
+export function afterSetting(fun: () => any): () => any
+export function afterSetting(keys: IMayArr<ISettingKeys>, fun: () => any): () => any
+export function afterSetting(keys: IMayArr<ISettingKeys> | (() => any) | null, fun?: () => any): () => any {
     function addFun(key: ISettingKeys, fun: () => any) {
         if (typeof settings[key] == 'undefined') {
             settings[key] = { afterSet: [fun], fun: [], value: null }
@@ -64,24 +82,72 @@ export function afterSetting(keys?: IMayArr<ISettingKeys>): MethodDecorator {
             settings[key].afterSet.push(fun)
         }
     }
-    return function(this: any, _target, _key, descriptor) {
+
+    if (typeof keys === 'function') {
+        fun = keys
+        keys = null
+    }
+    if (fun == null) {
+        return () => { }
+    }
+
+    if (keys == null) {
+        afterSet.push(fun)
+    } else if (Array.isArray(keys)) {
+        for (let i = 0; i < keys.length; i++) {
+            addFun(keys[i], fun)
+        }
+    } else {
+        addFun(keys, fun)
+    }
+    return fun
+}
+
+export function _afterSetting(keys?: IMayArr<ISettingKeys>): IMethodDecorator<() => any> {
+    function addFun(key: ISettingKeys, fun: () => any) {
+        if (typeof settings[key] == 'undefined') {
+            settings[key] = { afterSet: [fun], fun: [], value: null }
+        } else {
+            settings[key].afterSet.push(fun)
+        }
+    }
+    return function(this: any, _target, decKey, descriptor) {
         // TODO Test this
         if (descriptor.value != null) {
-            const fun = (<unknown>descriptor.value as () => any).bind(this)
-            if (keys == null) {
-                afterSet.push(fun)
-            } else if (Array.isArray(keys)) {
-                keys.forEach(key => {
-                    addFun(key, fun)
+
+            const value = descriptor.value
+
+            delete descriptor.value
+            delete descriptor.writable
+            descriptor.get = function() {
+                const fun = value.bind(this)
+
+                Object.defineProperty(this, decKey, {
+                    enumerable: descriptor.enumerable,
+                    configurable: descriptor.configurable,
+                    value: fun
                 })
-            } else {
-                addFun(keys, fun)
+
+                if (keys == null) {
+                    afterSet.push(fun)
+                } else if (Array.isArray(keys)) {
+                    keys.forEach(key => {
+                        addFun(key, fun)
+                    })
+                } else {
+                    addFun(keys, fun)
+                }
+                return this[name]
             }
+
+
         }
 
         return descriptor
     }
 }
+
+// TODO Implement don't send on bad value
 
 export async function setSetting<T extends keyof ISettingInput>(key: T, value: ISettingInput[T], send = true, doAfterSet = true) {
     if (key in settings && settings[key].fun.length > 0) {

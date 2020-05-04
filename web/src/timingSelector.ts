@@ -130,7 +130,9 @@ export class TimingSelector {
     }
 }
 export function getNewSelector() {
-    const el = (<DocumentFragment>selectorTemplate.content.cloneNode()).firstElementChild
+    const fragment = selectorTemplate.content.cloneNode(true) as DocumentFragment
+    const el = fragment.firstElementChild
+    
     if (el == null) {
         throw new Error('Template is Empty')
     }

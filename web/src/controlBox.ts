@@ -1,6 +1,6 @@
 import { HidableControl } from './control';
 import { getElementByID, getFirstTextByOuterID, msToMinSecStr } from './util';
-import { setting, afterSetting, setSetting, setSettings } from './settings';
+import { onSetting, afterSetting, setSetting, setSettings } from './settings';
 import { TimingSelector } from './timingSelector';
 import timeInput from './timeInputs'
 import border from './border'
@@ -69,8 +69,7 @@ class ControlBox extends HidableControl {
         }
     }
 
-    @afterSetting(['timerStart', 'timerStop'])
-    updateStartButtonText() {
+    updateStartButtonText = afterSetting(['timerStart', 'timerStop'], () => {
         let val = ''
 
         if (this.timerStart > 0 && this.timerStop == 0) {
@@ -84,16 +83,14 @@ class ControlBox extends HidableControl {
         if (this.button.start.value != val) {
             this.button.start.value = val
         }
-    }
+    })
 
-    @afterSetting(['timerGreen', 'timerYellow', 'timerRed', 'timerOvertime'])
-    afterIntervalChange() {
+    afterIntervalChange = afterSetting(['timerGreen', 'timerYellow', 'timerRed', 'timerOvertime'], () => {
         this.clearCustomIntervalCache()
         this.refreshTimeInput()
-    }
+    })
 
-    @afterSetting(['timerStart', 'timerStop', 'presetTime', 'timerGreen', 'timerYellow', 'timerRed', 'timerOvertime'])
-    refresh() {
+    refresh = afterSetting(['timerStart', 'timerStop', 'presetTime', 'timerGreen', 'timerYellow', 'timerRed', 'timerOvertime'], () => {
         if (this.timerStart === 0) {
             this.readout.data = '00:00'
             border.colour = 'white'
@@ -121,31 +118,33 @@ class ControlBox extends HidableControl {
         }
 
         // TODO Do RequestNextFrame
-    }
+    })
 
-    @setting('timerStart')
-    onStart(val: number) {
+    onStart = onSetting('timerStart', (val) => {
         if (typeof val == 'number') {
             this.timerStart = val
         }
-    }
+    })
 
-    @setting('timerStop')
-    onStop(val: number) {
+    onStop = onSetting('timerStop', (val) => {
         if (typeof val == 'number') {
             this.timerStop = val
         }
-    }
+    })
 
-    @setting('presetTime')
-    onPreset(val: number | string) {
-        this.selector.set(val)
-    }
 
-    @setting('speakerName')
-    onSpeakerName(val: string) {
-        this.speaker.value = val
-    }
+    onPreset = onSetting('presetTime', (val) => {
+        if (val != null) {
+            this.selector.set(val)
+        }
+    })
+
+
+    onSpeakerName = onSetting('speakerName', (val) => {
+        if (val != null) {
+            this.speaker.value = val
+        }
+    })
 }
 
 export default new ControlBox('controls')
