@@ -3,9 +3,9 @@ import { getTimeIntervals } from './timeIntervals'
 import { ITimePresetMs, ITimePreset } from './types'
 
 const selectorTemplate = getElementByID('timeSelectionTemplate', 'template')
+const selectorOptions = collectionToArray((selectorTemplate.content.firstElementChild as HTMLSelectElement).options)
 export class TimingSelector {
     el: HTMLSelectElement
-    options: HTMLOptionElement[]
     intervalCache: { str?: ITimePreset, ms?: ITimePresetMs } = {}
 
     constructor(appendTo: HTMLElement | string, prepend = false) {
@@ -19,7 +19,6 @@ export class TimingSelector {
             throw new Error('Invalid Element')
         }
         this.el = getNewSelector()
-        this.options = collectionToArray(this.el.options)
         if (prepend) {
             div.prepend(this.el)
         } else {
@@ -29,34 +28,17 @@ export class TimingSelector {
             this.clearCache()
         })
     }
-
-    getOption(index: number | string): null | HTMLOptionElement {
-        if (typeof index === 'number') {
-            if (Number.isNaN(index)) {
-                return null
-            }
-            if (index < this.options.length) {
-                return this.options[index]
-            }
-        } else {
-            const opt = this.options.find(el => el.value == index)
-            if (opt != null) {
-                return opt
-            }
-            if (/^\d+$/.test(index)) {
-                return this.getOption(+index)
-            }
-        }
-        return null
+    getOption(index: number | string) {
+        return getOption(index)
     }
 
     getOptionValue(index: number | string) {
-        const opt = this.getOption(index)
+        const opt = getOption(index)
         return opt?.value
     }
 
     getOptionText(index: number | string) {
-        const opt = this.getOption(index)
+        const opt = getOption(index)
         return opt?.text
     }
 
@@ -139,4 +121,34 @@ export function getNewSelector() {
         throw new Error('Template is missing Selector')
     }
     return el as HTMLSelectElement
+}
+export function getOption(index: number | string, assert?: true, options?: HTMLOptionElement[]): HTMLOptionElement
+export function getOption(index: number | string, assert: false, options?: HTMLOptionElement[]): null | HTMLOptionElement
+export function getOption(index: number | string, assert = false, options = selectorOptions): null | HTMLOptionElement {
+    if (typeof index === 'number') {
+        if (Number.isNaN(index)) {
+            if (assert) {
+                throw new Error(`The Option '${index}' does not exist`)
+            }
+            return null
+        }
+        if (index < options.length) {
+            return options[index]
+        }
+    } else {
+        const opt = options.find(el => el.value == index)
+        if (opt != null) {
+            return opt
+        }
+        if (/^\d+$/.test(index)) {
+            return getOption(+index)
+        }
+    }
+    if (assert) {
+        throw new Error(`The Option '${index}' does not exist`)
+    }
+    return null
+}
+export function getTimingString(val: number | string) {
+    return getOption(val)?.text ?? ''
 }

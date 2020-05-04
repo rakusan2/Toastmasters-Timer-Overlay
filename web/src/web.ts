@@ -1,12 +1,11 @@
 import { send, on } from './socket';
-import { setSettings } from './settings';
+import { setSettings, initSettings } from './settings';
 import uriBox from './uriBox'
 import controlBox from './controlBox'
-import { defaultSettings } from './constants';
 import { getParams } from './util';
 
 const params = getParams()
-const isView = params.view != null
+const isView = typeof params.view != 'undefined'
 let id = params.id ?? null
 let serverTimeOffset = 0
 
@@ -14,6 +13,8 @@ if (isView) {
     controlBox.hide()
     uriBox.hide()
 }
+
+console.log({ id, isView, params })
 
 on('connect', init)
 on('changedSetting', (res) => {
@@ -42,7 +43,7 @@ async function init() {
         }
         uriBox.setID(res.id)
         uriBox.lock(res.idLock)
-        setSettings({ ...defaultSettings, ...res.settings }, false)
+        initSettings(res.settings)
     } else {
         console.error(res.err)
     }

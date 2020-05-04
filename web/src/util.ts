@@ -1,4 +1,4 @@
-import { IBadTimeInput, IKeyVal, ITimePreset, ISettableColours } from './types'
+import { IBadTimeInput, IKeyVal, ITimePreset, ISettableColours, IDocumentTreeNode } from './types'
 
 const timeFormat = /(\d{1,2}):(\d{1,2})/
 
@@ -15,11 +15,15 @@ export function getElementByID(id: string, tagName?: string) {
         throw new Error(`Invalid TagName. Got ${el.tagName} Expected ${tagName.toUpperCase()}`)
     }
 
+    fixElement(el)
+
+    return el
+}
+
+function fixElement(el: HTMLElement) {
     if (el.tagName == 'INPUT') {
         stopKeyPropagation(el)
     }
-
-    return el
 }
 
 export function getFirstTextByOuterID(id: string, addMissing = true) {
@@ -64,6 +68,22 @@ export function getFirstElementByClassName(name: string, tagName?: string | Docu
         throw new Error(`Invalid TagName. Got ${el.tagName} Expected ${tagName.toUpperCase()}`)
     }
 
+    return el
+}
+
+export function createElement<K extends keyof HTMLElementTagNameMap>(tag: K, { className, id }: { className?: string | string[], id?: string } = {}): HTMLElementTagNameMap[K] {
+    const el = document.createElement(tag)
+    if (id != null) {
+        el.id = id
+    }
+    if (className != null) {
+        if (Array.isArray(className)) {
+            className.forEach(c => el.classList.add(c))
+        } else {
+            el.classList.add(className)
+        }
+    }
+    fixElement(el)
     return el
 }
 
@@ -149,7 +169,7 @@ export function msToMinSecStr(totalMs: number) {
     const totalSec = Math.floor(totalMs / 1000)
     const sec = totalSec % 60
     const min = Math.floor(totalSec / 60)
-    
+
     return `${fixedDigits(min, 2)}:${fixedDigits(sec, 2)}`
 }
 
@@ -180,4 +200,24 @@ export function getParams() {
         })
     })
     return params
+}
+
+let nextFrameFuncs: ((time: number) => any)[] = []
+export function requestNextFrame(fun: (time: number) => any) {
+    if (nextFrameFuncs.includes(fun)) {
+        return
+    }
+    const isFirst = nextFrameFuncs.length == 0
+
+    nextFrameFuncs.push(fun)
+
+    if (isFirst) {
+        window.requestAnimationFrame(time => {
+            const toRun = nextFrameFuncs
+            nextFrameFuncs = []
+            toRun.forEach(fun => {
+                fun(time)
+            })
+        })
+    }
 }

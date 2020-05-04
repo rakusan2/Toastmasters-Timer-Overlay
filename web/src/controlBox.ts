@@ -1,5 +1,5 @@
 import { HidableControl } from './control';
-import { getElementByID, getFirstTextByOuterID, msToMinSecStr } from './util';
+import { getElementByID, getFirstTextByOuterID, msToMinSecStr, requestNextFrame } from './util';
 import { onSetting, afterSetting, setSetting, setSettings } from './settings';
 import { TimingSelector } from './timingSelector';
 import timeInput from './timeInputs'
@@ -40,8 +40,6 @@ class ControlBox extends HidableControl {
         } else {
             setSettings({ timerStart: Date.serverNow(), timerStop: 0 })
         }
-
-        this.updateStartButtonText()
     }
 
     onResetButton() {
@@ -70,6 +68,7 @@ class ControlBox extends HidableControl {
     }
 
     updateStartButtonText = afterSetting(['timerStart', 'timerStop'], () => {
+        const text = this.button.start.firstChild as Text
         let val = ''
 
         if (this.timerStart > 0 && this.timerStop == 0) {
@@ -80,8 +79,8 @@ class ControlBox extends HidableControl {
             val = 'Start'
         }
 
-        if (this.button.start.value != val) {
-            this.button.start.value = val
+        if (text.data != val) {
+            text.data = val
         }
     })
 
@@ -102,11 +101,11 @@ class ControlBox extends HidableControl {
         if (msElapsed < green) {
             border.colour = 'white'
         } else if (msElapsed < yellow) {
-            border.colour = 'white'
+            border.colour = 'green'
         } else if (msElapsed < red) {
-            border.colour = 'white'
+            border.colour = 'yellow'
         } else if (msElapsed < overtime) {
-            border.colour = 'white'
+            border.colour = 'red'
         } else {
             border.colour = (msElapsed - overtime) % 1000 >= 500 ? 'white' : 'red'
         }
@@ -117,7 +116,9 @@ class ControlBox extends HidableControl {
             this.readout.data = timeStr
         }
 
-        // TODO Do RequestNextFrame
+        if (this.timerStart > 0 && this.timerStop == 0) {
+            requestNextFrame(() => this.refresh())
+        }
     })
 
     onStart = onSetting('timerStart', (val) => {

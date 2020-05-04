@@ -27,6 +27,7 @@ export function onSetting(keys: IMayArr<ISettingKeys>, fun: (val: any, key: stri
     return fun
 }
 
+/** Does Not Work */
 export function _setting(keys: IMayArr<ISettingKeys>): IMethodDecorator<(val: any, key?: string) => any> {
 
     function addFun(key: ISettingKeys, fun: (val: any, key: string) => any) {
@@ -39,7 +40,6 @@ export function _setting(keys: IMayArr<ISettingKeys>): IMethodDecorator<(val: an
 
     return function(this: any, _target, decKey, descriptor) {
 
-        // TODO Test this
         if (descriptor.value != null) {
 
             const value = descriptor.value
@@ -103,6 +103,7 @@ export function afterSetting(keys: IMayArr<ISettingKeys> | (() => any) | null, f
     return fun
 }
 
+/** Does Not Work */
 export function _afterSetting(keys?: IMayArr<ISettingKeys>): IMethodDecorator<() => any> {
     function addFun(key: ISettingKeys, fun: () => any) {
         if (typeof settings[key] == 'undefined') {
@@ -112,7 +113,7 @@ export function _afterSetting(keys?: IMayArr<ISettingKeys>): IMethodDecorator<()
         }
     }
     return function(this: any, _target, decKey, descriptor) {
-        // TODO Test this
+        
         if (descriptor.value != null) {
 
             const value = descriptor.value
@@ -150,6 +151,7 @@ export function _afterSetting(keys?: IMayArr<ISettingKeys>): IMethodDecorator<()
 // TODO Implement don't send on bad value
 
 export async function setSetting<T extends keyof ISettingInput>(key: T, value: ISettingInput[T], send = true, doAfterSet = true) {
+    console.log({ set: key, val: value })
     if (key in settings && settings[key].fun.length > 0) {
         settings[key].value = value
         settings[key].fun.forEach(a => a(value, key))
@@ -215,5 +217,5 @@ async function sendSettings(settings: ISettingInput) {
 }
 
 export function initSettings(val: ISettingInput) {
-    setSettings({ ...val, ...defaultSettings })
+    setSettings({ ...val, ...defaultSettings }, false)
 }
