@@ -154,7 +154,8 @@ export async function setSetting<T extends keyof ISettingInput>(key: T, value: I
         settings[key].value = value
         settings[key].fun.forEach(a => a(value, key))
     } else {
-        throw new Error(`Can not set setting for key '${key}'`)
+        console.warn(`Can not set setting '${key}'`)
+        return false
     }
 
     if (doAfterSet) {

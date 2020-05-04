@@ -82,5 +82,11 @@ export interface ISocketResponse {
     get: IResponse<ISettings>
 }
 
+export interface ISocketListener {
+    connect: []
+    changedSetting: [IResponse<ISettings>]
+    [key: string]: any[]
+}
+
 export type ISettableColours = 'white' | 'green' | 'yellow' | 'red'
 export type IMethodDecorator<T> = (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;

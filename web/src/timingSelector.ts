@@ -25,10 +25,9 @@ export class TimingSelector {
         } else {
             div.append(this.el)
         }
-    }
-
-    onCustomChange() {
-
+        this.el.addEventListener('change', () => {
+            this.clearCache()
+        })
     }
 
     getOption(index: number | string): null | HTMLOptionElement {
@@ -132,7 +131,7 @@ export class TimingSelector {
 export function getNewSelector() {
     const fragment = selectorTemplate.content.cloneNode(true) as DocumentFragment
     const el = fragment.firstElementChild
-    
+
     if (el == null) {
         throw new Error('Template is Empty')
     }

@@ -85,7 +85,7 @@ class ControlBox extends HidableControl {
         }
     })
 
-    afterIntervalChange = afterSetting(['timerGreen', 'timerYellow', 'timerRed', 'timerOvertime'], () => {
+    afterIntervalChange = afterSetting(['timerGreen', 'timerYellow', 'timerRed', 'timerOvertime', 'presetTime'], () => {
         this.clearCustomIntervalCache()
         this.refreshTimeInput()
     })
