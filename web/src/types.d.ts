@@ -1,3 +1,5 @@
+import { TimingSelector } from './timingSelector'
+
 export type IResponseFn<T = {}> = (res: IResponse<T>) => any
 
 export type IResponse<T = {}> = IResponseERR | (IResponseOK & T)
@@ -69,11 +71,10 @@ declare global {
     }
 }
 
-export interface ISpeaker {
-    speakerDiv: HTMLDivElement
-    name: Text
-    time: Text
-    preset: Text | HTMLSelectElement
+export interface ISpeakerInput {
+    name?: string
+    time?: string
+    preset?: string | number
 }
 
 export interface ISocketResponse {
