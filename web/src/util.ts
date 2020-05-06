@@ -1,4 +1,4 @@
-import { IBadTimeInput, IKeyVal, ITimePreset, ISettableColours, IDocumentTreeNode } from './types'
+import { IBadTimeInput, IKeyVal, ITimePreset, ISettableColours } from './types'
 
 const timeFormat = /(\d{1,2}):(\d{1,2})/
 
@@ -189,19 +189,6 @@ export function isSettableColor(val: any): val is ISettableColours {
     return typeof val == 'string' && settableColors.includes(val)
 }
 
-export function getParams() {
-    const params: { [key: string]: string | null } = {}
-    document.URL.split('?').slice(1).forEach(query => {
-        query.split('&').forEach(part => {
-            const [key, val] = part.split('=').map(a => a.trim())
-            if (key.length > 0) {
-                params[key] = val ?? null
-            }
-        })
-    })
-    return params
-}
-
 let nextFrameFuncs: ((time: number) => any)[] = []
 export function requestNextFrame(fun: (time: number) => any) {
     if (nextFrameFuncs.includes(fun)) {
@@ -219,5 +206,20 @@ export function requestNextFrame(fun: (time: number) => any) {
                 fun(time)
             })
         })
+    }
+}
+export function passStr(val: any) {
+    if (typeof val == 'string') {
+        return val
+    } else {
+        return void 0
+    }
+}
+
+export function passStrNum(val: any) {
+    if (typeof val === 'string' || typeof val === 'number') {
+        return val
+    } else {
+        return void 0
     }
 }

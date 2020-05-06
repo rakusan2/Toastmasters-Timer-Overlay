@@ -2,9 +2,8 @@ import { send, on } from './socket';
 import { setSettings, initSettings } from './settings';
 import uriBox from './uriBox'
 import controlBox from './controlBox'
-import { getParams } from './util';
+import params from './params'
 
-const params = getParams()
 const isView = typeof params.view != 'undefined'
 let id = params.id ?? null
 let serverTimeOffset = 0
