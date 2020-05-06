@@ -101,12 +101,20 @@ export class Speaker {
         this.setPreset(val.preset)
     }
 
+    focus() {
+        this.el.classList.add('inFocus')
+    }
+
+    unFocus() {
+        this.el.classList.remove('inFocus')
+    }
 }
 
 export class SpeakerGroup {
     speakers: { [id: number]: Speaker } = {}
     speakerObjects: ISpeakerInput[] = []
     container: HTMLDivElement
+    inFocus: Speaker | null = null
 
     constructor(container: string | HTMLDivElement, speakers?: ISpeakerInput[]) {
         this.container = typeof container === 'string' ? getElementByID(container, 'div') : container
@@ -156,7 +164,7 @@ export class SpeakerGroup {
         this._add(cleanSpeakerArr(speakers))
     }
 
-    updateAll(speakers: ISpeakerInput[] | ISpeakerInput) {
+    updateAll(speakers: any) {
         const cleaned = cleanSpeakerArr(speakers)
         const { remove, add, move, change } = diffSpeakers(this.speakerObjects, cleaned)
 
@@ -262,6 +270,33 @@ export class SpeakerGroup {
             if (last == null) break
             this.container.removeChild(last)
         }
+    }
+
+    focus(id: number) {
+        if (typeof this.speakers[id] != 'undefined') {
+            const speaker = this.speakers[id]
+            if(this.inFocus == speaker)return
+            if(this.inFocus != null){
+                this.inFocus.unFocus()
+            }
+            this.inFocus = speaker
+            speaker.focus()
+        }else{
+            this.unFocus()
+        }
+    }
+
+    focusAt(position: number) {
+        if(position>0 && position < this.speakerObjects.length){
+            this.focus(this.speakerObjects[position].id)
+        }else{
+            this.unFocus()
+        }
+    }
+
+    unFocus(){
+        this.inFocus?.unFocus()
+        this.inFocus = null
     }
 }
 
