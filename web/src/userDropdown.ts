@@ -1,6 +1,7 @@
 import { HidableControl } from './control';
 import { onSetting } from './settings';
 import { getElementByID } from './util';
+import { SpeakerGroup } from './speaker';
 
 class UserDropdown extends HidableControl {
 
@@ -9,11 +10,8 @@ class UserDropdown extends HidableControl {
         add: getElementByID('dropdown-add', 'div'),
         remove: getElementByID('dropdown-remove', 'div')
     }
-    userBlock = getElementByID('dropdown-users', 'div')
+    speakers = new SpeakerGroup('dropdown-users')
 
-    constructor(val: string | HTMLDivElement) {
-        super(val)
-    }
     isView(val: boolean) {
 
     }
@@ -21,6 +19,9 @@ class UserDropdown extends HidableControl {
 
     }
     onSpeakers = onSetting('speakers', val => {
+
+    })
+    onSpeakerIndex = onSetting('speakerIndex', val => {
 
     })
 }

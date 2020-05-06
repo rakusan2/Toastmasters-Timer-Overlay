@@ -43,7 +43,8 @@ export interface ISettingInputKnown {
     speakerName?: string
     presetTime?: number | string
     colorOverride?: string
-    speakers?: IMayArr<{ name?: string, time?: string | number, preset?: number | string }>
+    speakers?: IMayArr<ISpeakerInput>
+    speakerIndex?: number
 }
 
 export type ISettingKeys = keyof ISettingInputKnown
@@ -72,8 +73,9 @@ declare global {
 }
 
 export interface ISpeakerInput {
+    id: number
     name?: string
-    time?: string
+    time?: string | number
     preset?: string | number
 }
 
