@@ -40,6 +40,7 @@ export class Speaker {
         speakerTime.append(timeText)
         speakerTop.append(speakerName, speakerTime)
         speaker.append(speakerTop, speakerPreset)
+        speaker.setAttribute('data-id', id.toString())
 
         this.el = speaker
         this.timeNode = timeText
@@ -47,15 +48,17 @@ export class Speaker {
         this.presetNode = presetInput
     }
 
-    get time() {
+    getTime() {
         return this.timeNode.data
     }
 
-    set time(val) {
-        this.timeNode.data = val
+    setTime(val: string | number | undefined) {
+        if (this.timeNode.data !== val) {
+            this.timeNode.data = fixTime(val)
+        }
     }
 
-    get name() {
+    getName() {
         if (this.nameNode instanceof Text) {
             return this.nameNode.data
         } else {
@@ -63,7 +66,7 @@ export class Speaker {
         }
     }
 
-    set name(val) {
+    setName(val: string = '') {
         if (this.nameNode instanceof Text) {
             this.nameNode.data = val
         } else {
@@ -71,7 +74,7 @@ export class Speaker {
         }
     }
 
-    get preset() {
+    getPreset() {
         if (this.presetNode instanceof Text) {
             return this.presetValue
         } else {
@@ -79,7 +82,8 @@ export class Speaker {
         }
     }
 
-    set preset(val) {
+    setPreset(val: string | number = 0) {
+        if (this.presetValue === val) return
         if (this.presetNode instanceof Text) {
             const opt = getOption(val, true)
             this.presetValue = opt.value
@@ -88,6 +92,13 @@ export class Speaker {
             this.presetNode.set(val)
             this.presetValue = this.presetNode.get()
         }
+    }
+
+    update(val: ISpeakerInput) {
+        if (this.id !== val.id) return
+        this.setTime(val.time)
+        this.setName(val.name)
+        this.setPreset(val.preset)
     }
 
 }
@@ -120,8 +131,25 @@ export class SpeakerGroup {
         }
     }
 
-    addOne(speakers: ISpeakerInput, position = -1) {
+    addOne(speaker: ISpeakerInput, position = -1) {
+        const cleaned = cleanSpeaker(speaker)
+        if (cleaned == null) return
+        const id = cleaned.id
 
+        if (typeof this.speakers[id] === 'undefined') {
+            const speaker = new Speaker(cleaned)
+            this.speakers[id] = speaker
+
+            if (position < 0 || position >= this.speakerObjects.length) {
+                this.container.append(speaker.el)
+                this.speakerObjects.push(cleaned)
+            } else {
+                this.container.insertBefore(speaker.el, this.container.children[position])
+                this.speakerObjects.splice(position, 0, speaker)
+            }
+        } else {
+            console.warn(`Speaker id ${id} already exists`)
+        }
     }
 
     addMany(speakers?: ISpeakerInput[]) {
@@ -139,23 +167,68 @@ export class SpeakerGroup {
         }
 
         if (move != null) {
-            this.rearrange(move)
+            this._rearrangeElements(move)
         }
 
         for (let i = 0; i < change.length; i++) {
-            const { id, change: changeData } = change[i]
-            if(typeof this.speakers[id] === 'undefined') continue
+            const speaker = change[i]
+            const id = speaker.id
 
-            
+            if (typeof this.speakers[id] !== 'undefined') {
+                this.speakers[id].update(speaker)
+            }
         }
+        this.speakerObjects = cleaned
     }
 
     move(id: number, shift: number) {
+        const speakerIndex = this.speakerObjects.findIndex(a => a.id === id)
+        if (speakerIndex < 0) throw new Error(`Speaker ${id} not found`)
 
+        this.moveTo(id, Math.max(0, speakerIndex + shift))
+    }
+
+    moveTo(id: number, position = -1) {
+        if (typeof this.speakers[id] != 'undefined') {
+            const speaker = this.speakers[id]
+            const speakerObjIndex = this.speakerObjects.findIndex(a => a.id === id)
+            if (speakerObjIndex < 0) throw new Error('Speaker exists but its object does not')
+            const [speakerObj] = this.speakerObjects.splice(speakerObjIndex, 1)
+
+            if (position < 0 || position >= this.speakerObjects.length) {
+                this.container.append(speaker.el)
+                this.speakerObjects.push(speakerObj)
+            } else {
+                this.container.insertBefore(speaker.el, this.container.children[position])
+                this.speakerObjects.splice(position, 0, speakerObj)
+            }
+        }
     }
 
     rearrange(ids: number[]) {
+        this._rearrangeElements(ids)
 
+        const res = this.speakerObjects.filter(a => !ids.includes(a.id))
+
+        for (let i = 0; i < ids.length; i++) {
+            const id = ids[i]
+            if (typeof this.speakers[id] === 'undefined') continue
+
+            const speaker = this.speakerObjects.find(a => a.id === id)
+            if (speaker != null) {
+                res.push(speaker)
+            }
+        }
+        this.speakerObjects = res
+    }
+
+    private _rearrangeElements(ids: number[]) {
+        for (let i = 0; i < ids.length; i++) {
+            const id = ids[i]
+            if (typeof this.speakers[id] === 'undefined') continue
+
+            this.container.append(this.speakers[id].el)
+        }
     }
 
     remove(id: number | number[]) {
@@ -167,16 +240,28 @@ export class SpeakerGroup {
                 this.container.removeChild(speaker.el)
                 delete this.speakers[speakerId]
             }
+            this.speakerObjects = this.speakerObjects.filter(a => !id.includes(a.id))
         } else if (typeof this.speakers[id] != 'undefined') {
             this.container.removeChild(this.speakers[id].el)
             delete this.speakers[id]
+            this.speakerObjects = this.speakerObjects.filter(a => a.id !== id)
         }
     }
     removeAt(index: number) {
-
+        if (index < 0 || index >= this.speakerObjects.length) return
+        const [speakerObj] = this.speakerObjects.splice(index, 1)
+        const speaker = this.speakers[speakerObj.id]
+        this.container.removeChild(speaker.el)
+        delete this.speakers[speakerObj.id]
     }
     removeAll() {
-
+        this.speakerObjects = []
+        this.speakers = {}
+        while (this.container.firstChild) {
+            const last = this.container.lastChild
+            if (last == null) break
+            this.container.removeChild(last)
+        }
     }
 }
 
@@ -214,7 +299,7 @@ function cleanSpeakerArr(obj: any): ISpeakerInput[] {
 }
 
 function diffSpeakers(original: ISpeakerInput[], secondary: ISpeakerInput[]): IDiff {
-    const change: IChange[] = [],
+    const change: ISpeakerInput[] = [],
         remove: number[] = [],
         add: ISpeakerInput[] = [],
         originalChangedIds: number[] = [],
@@ -236,32 +321,20 @@ function diffSpeakers(original: ISpeakerInput[], secondary: ISpeakerInput[]): ID
     let hasMoved = false
 
     for (let index = 0; index < secondaryIds.length; index++) {
-        const id = secondaryIds[index]
+        const secondarySpeaker = secondary[index]
+        const id = secondarySpeaker.id
         const originalIndex = originalChangedIds.indexOf(id)
 
         if (originalIndex < 0) {
-            add.push(secondary[index])
+            add.push(secondarySpeaker)
         } else {
             const originalSpeaker = originalChangedSpeakers[originalIndex]
-            const secondarySpeaker = secondary[index]
-            const changeData: IChange = { id, change: {} }
-            let addedChange = false
-
-            if (originalSpeaker.name != secondarySpeaker.name) {
-                changeData.change.name = secondarySpeaker.name
-                addedChange = true
-            }
-            if (originalSpeaker.preset != secondarySpeaker.preset) {
-                changeData.change.preset = secondarySpeaker.preset
-                addedChange = true
-            }
-            if (originalSpeaker.time != secondarySpeaker.time) {
-                changeData.change.time = secondarySpeaker.time
-                addedChange = true
-            }
+            let addedChange = originalSpeaker.name != secondarySpeaker.name
+                || originalSpeaker.preset != secondarySpeaker.preset
+                || originalSpeaker.time != secondarySpeaker.time
 
             if (addedChange) {
-                change.push(changeData)
+                change.push(secondarySpeaker)
             }
         }
 
@@ -286,7 +359,7 @@ interface IChange {
 }
 
 interface IDiff {
-    change: IChange[]
+    change: ISpeakerInput[]
     remove: number[]
     add: ISpeakerInput[]
     move?: number[]
