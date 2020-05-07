@@ -82,12 +82,12 @@ class ControlBox extends HidableControl {
         if (text.data != val) {
             text.data = val
         }
-    })
+    }, this)
 
     afterIntervalChange = afterSetting(['timerGreen', 'timerYellow', 'timerRed', 'timerOvertime', 'presetTime'], () => {
         this.clearCustomIntervalCache()
         this.refreshTimeInput()
-    })
+    }, this)
 
     refresh = afterSetting(['timerStart', 'timerStop', 'presetTime', 'timerGreen', 'timerYellow', 'timerRed', 'timerOvertime'], () => {
         if (this.timerStart === 0) {
@@ -119,33 +119,33 @@ class ControlBox extends HidableControl {
         if (this.timerStart > 0 && this.timerStop == 0) {
             requestNextFrame(() => this.refresh())
         }
-    })
+    }, this)
 
     onStart = onSetting('timerStart', (val) => {
         if (typeof val == 'number') {
             this.timerStart = val
         }
-    })
+    }, this)
 
     onStop = onSetting('timerStop', (val) => {
         if (typeof val == 'number') {
             this.timerStop = val
         }
-    })
+    }, this)
 
 
     onPreset = onSetting('presetTime', (val) => {
         if (val != null) {
             this.selector.set(val)
         }
-    })
+    }, this)
 
 
     onSpeakerName = onSetting('speakerName', (val) => {
         if (val != null) {
             this.speaker.value = val
         }
-    })
+    }, this)
 }
 
 export default new ControlBox('controls')

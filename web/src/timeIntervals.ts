@@ -59,28 +59,28 @@ onSetting('timerGreen', (val) => {
     if (time != null) {
         customPreset.green = time
     }
-})
+},timePresets)
 
 onSetting('timerYellow', (val) => {
     const time = fixTime(val, null)
     if (time != null) {
         customPreset.yellow = time
     }
-})
+},timePresets)
 
 onSetting('timerRed', (val) => {
     const time = fixTime(val, null)
     if (time != null) {
         customPreset.red = time
     }
-})
+},timePresets)
 
 onSetting('timerOvertime', (val) => {
     const time = fixTime(val, null)
     if (time != null) {
         customPreset.overtime = time
     }
-})
+},timePresets)
 
 export function getTimeIntervals(key: string) {
     if (key === 'Custom') {

@@ -44,7 +44,7 @@ class Border {
             this.overrideColour = val
             this.refresh()
         }
-    })
+    }, this)
 }
 
 export default new Border(['left-border', 'right-border', 'top-border', 'bottom-border'])
