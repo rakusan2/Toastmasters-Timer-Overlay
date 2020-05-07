@@ -143,7 +143,7 @@ io.on('connection', socket => {
         let changedSettings: IKeyVal<ISetting> = {}
         for (let key in settings) {
             const val = settings[key]
-            if ((typeof val === 'string') || (typeof val === 'number') || (typeof val === 'boolean')) {
+            if (val != null) {
                 user.settings[key] = val
                 changedSettings[key] = val
             } else {
