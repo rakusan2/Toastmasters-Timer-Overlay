@@ -31,7 +31,7 @@ export type ISetting = ISettingSimple | IMayArr<IKeyVal<ISettingSimple>>
 export type IFn<T, K = any> = (val: T) => K
 export type IBadTimeInput = string | number | null | undefined
 
-export type ISettingInput = ISettingInputKnown & IKeyVal<ISetting>
+export type ISettingInput = ISettingInputKnown | IKeyVal<number | string | undefined | IMayArr<ISpeakerInput>>
 
 export interface ISettingInputKnown {
     timerStart?: number
@@ -45,6 +45,7 @@ export interface ISettingInputKnown {
     colorOverride?: string
     speakers?: IMayArr<ISpeakerInput>
     speakerIndex?: number
+    speakersHide?: boolean
 }
 
 export type ISettingKeys = keyof ISettingInputKnown

@@ -27,6 +27,9 @@ export class TimingSelector {
         this.el.addEventListener('change', () => {
             this.clearCache()
         })
+        this.el.addEventListener('click', ev=>{
+            ev.stopPropagation()
+        })
     }
     getOption(index: number | string) {
         return getOption(index)

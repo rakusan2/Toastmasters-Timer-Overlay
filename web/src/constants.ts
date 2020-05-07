@@ -1,8 +1,9 @@
-import { ISettingInput } from './types'
+import { ISettingInputKnown } from './types'
+import params from './params'
 
 export const HOST = new URL(window.location.href).host
 
-export const defaultSettings: Required<ISettingInput> = {
+export const defaultSettings: Required<ISettingInputKnown> = {
     timerStart: 0,
     timerStop: 0,
     timerGreen: '00:05',
@@ -12,5 +13,7 @@ export const defaultSettings: Required<ISettingInput> = {
     speakerName: '',
     presetTime: 'TT',
     speakers: [],
-    colorOverride: ''
+    colorOverride: '',
+    speakerIndex: -1,
+    speakersHide: 'view' in params
 }

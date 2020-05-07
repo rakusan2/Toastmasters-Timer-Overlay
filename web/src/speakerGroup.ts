@@ -1,4 +1,4 @@
-import { Speaker } from './speaker'
+import { Speaker, createSpeaker } from './speaker'
 import { ISpeakerInput } from './types'
 import { getElementByID, passStr, passStrNum } from './util'
 
@@ -7,9 +7,21 @@ export class SpeakerGroup {
     speakerObjects: ISpeakerInput[] = []
     container: HTMLDivElement
     inFocus: Speaker | null = null
+    onChange: (val: ISpeakerInput) => any
 
-    constructor(container: string | HTMLDivElement, speakers?: ISpeakerInput[]) {
+    constructor(container: string | HTMLDivElement, speakers?: ISpeakerInput[], public onFocus: (id?: number) => any = () => { }, onChange?: (val: ISpeakerInput) => any) {
         this.container = typeof container === 'string' ? getElementByID(container, 'div') : container
+
+        this.onChange = val => {
+            const speakerObj = this.speakerObjects.find(a => a.id === val.id)
+            if (speakerObj == null) {
+                console.error('Got Change on non-existent object')
+                return
+            }
+            speakerObj.name = val.name
+            speakerObj.preset = val.preset
+            if (onChange != null) onChange(val)
+        }
 
         this.addMany(speakers)
     }
@@ -20,9 +32,14 @@ export class SpeakerGroup {
             const id = speakerObj.id
 
             if (typeof this.speakers[id] === 'undefined') {
-                const speaker = new Speaker(speakerArr[i])
+                const speaker = new Speaker(speakerArr[i], this.onChange)
                 this.speakers[id] = speaker
                 this.speakerObjects.push(speakerObj)
+                speaker.el.onclick = ev => {
+                    ev.stopPropagation()
+                    this.toggleFocus(id)
+                    this.onFocus(this.inFocus != null ? this.getSpeakerPosition(id) : undefined)
+                }
                 if (append) this.container.append(speaker.el)
             } else {
                 console.warn(`Speaker id ${id} already exists`)
@@ -31,14 +48,24 @@ export class SpeakerGroup {
         }
     }
 
+    addNew(position = -1) {
+        this.addOne(createSpeaker(this.onChange), position)
+    }
+
     addOne(speaker: ISpeakerInput, position = -1) {
         const cleaned = cleanSpeaker(speaker)
         if (cleaned == null) return
         const id = cleaned.id
 
         if (typeof this.speakers[id] === 'undefined') {
-            const speaker = new Speaker(cleaned)
+            const speaker = new Speaker(cleaned, this.onChange)
             this.speakers[id] = speaker
+
+            speaker.el.onclick = ev => {
+                ev.stopPropagation()
+                this.toggleFocus(id)
+                this.onFocus(this.inFocus != null ? this.getSpeakerPosition(id) : undefined)
+            }
 
             if (position < 0 || position >= this.speakerObjects.length) {
                 this.container.append(speaker.el)
@@ -54,6 +81,25 @@ export class SpeakerGroup {
 
     addMany(speakers?: ISpeakerInput[]) {
         this._add(cleanSpeakerArr(speakers))
+    }
+
+    updateOne(val: ISpeakerInput) {
+        const cleaned = cleanSpeaker(val)
+        if (cleaned == null) throw new Error('Invalid Input')
+
+        const { name, id, preset, time } = cleaned
+
+        const speakerObj = this.speakerObjects.find(a => a.id === id)
+        const speaker = this.speakers[id]
+        if (speakerObj == null || speaker == null) throw new Error('Non-Existent speaker')
+
+        speaker.setName(name)
+        speaker.setPreset(preset)
+        speaker.setTime(time)
+
+        speakerObj.name = name
+        speakerObj.preset = preset
+        speakerObj.time = time
     }
 
     updateAll(speakers: any) {
@@ -141,7 +187,13 @@ export class SpeakerGroup {
                 delete this.speakers[speakerId]
             }
             this.speakerObjects = this.speakerObjects.filter(a => !id.includes(a.id))
+            if (this.inFocus != null && id.includes(this.inFocus.id)) {
+                this.inFocus = null
+            }
         } else if (typeof this.speakers[id] != 'undefined') {
+            if (this.inFocus != null && this.inFocus.id === id) {
+                this.inFocus = null
+            }
             this.container.removeChild(this.speakers[id].el)
             delete this.speakers[id]
             this.speakerObjects = this.speakerObjects.filter(a => a.id !== id)
@@ -152,9 +204,11 @@ export class SpeakerGroup {
         const [speakerObj] = this.speakerObjects.splice(index, 1)
         const speaker = this.speakers[speakerObj.id]
         this.container.removeChild(speaker.el)
+        if (this.inFocus === speaker) this.inFocus = null
         delete this.speakers[speakerObj.id]
     }
     removeAll() {
+        this.inFocus = null
         this.speakerObjects = []
         this.speakers = {}
         while (this.container.firstChild) {
@@ -164,38 +218,69 @@ export class SpeakerGroup {
         }
     }
 
+    removeLast() {
+        const speakerObj = this.speakerObjects.pop()
+        if (speakerObj == null) return
+
+        this.remove(speakerObj.id)
+    }
+
+    removeInFocus() {
+        if (this.inFocus == null) return
+        const id = this.inFocus.id
+        this.inFocus = null
+        this.remove(id)
+    }
+
     focus(id: number) {
         if (typeof this.speakers[id] != 'undefined') {
             const speaker = this.speakers[id]
-            if(this.inFocus == speaker)return
-            if(this.inFocus != null){
+            if (this.inFocus == speaker) return
+            if (this.inFocus != null) {
                 this.inFocus.unFocus()
             }
             this.inFocus = speaker
             speaker.focus()
-        }else{
+        } else {
+            this.unFocus()
+        }
+    }
+
+    toggleFocus(id: number) {
+        if (typeof this.speakers[id] != 'undefined') {
+            const speaker = this.speakers[id]
+            if (this.inFocus == speaker) {
+                this.unFocus()
+                return
+            }
+            if (this.inFocus != null) {
+                this.inFocus.unFocus()
+            }
+            this.inFocus = speaker
+            speaker.focus()
+        } else {
             this.unFocus()
         }
     }
 
     focusAt(position: number) {
-        if(position>0 && position < this.speakerObjects.length){
+        if (position >= 0 && position < this.speakerObjects.length) {
             this.focus(this.speakerObjects[position].id)
-        }else{
+        } else {
             this.unFocus()
         }
     }
 
-    unFocus(){
+    unFocus() {
         this.inFocus?.unFocus()
         this.inFocus = null
     }
+
+    getSpeakerPosition(id: number) {
+        return this.speakerObjects.findIndex(a => a.id === id)
+    }
 }
 
-export function createSpeaker() {
-    const id = Math.round(Math.random() * 0xffff)
-    return new Speaker({ id })
-}
 function cleanSpeaker(obj: any): ISpeakerInput | undefined {
     if (obj != null && typeof obj === 'object' && typeof obj.id === 'number') {
         const { id, name, time, preset } = obj

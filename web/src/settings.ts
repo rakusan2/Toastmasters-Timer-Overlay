@@ -166,7 +166,10 @@ export async function setSetting(key: string, value: any, send = true, doAfterSe
     console.log({ set: key, val: value })
     if (key in settings && settings[key].funcs.some(a => a.fun.length > 0)) {
         settings[key].value = value
-        settings[key].funcs.forEach(a => a.fun.forEach(b => b(value, key)))
+        settings[key].funcs.forEach(a => {
+            if(caller != null && a.caller === caller) return
+            a.fun.forEach(b => b(value, key))
+        })
     } else {
         console.warn(`Can not set setting '${key}'`)
         return false
@@ -186,7 +189,7 @@ export async function setSetting(key: string, value: any, send = true, doAfterSe
 export async function setSettings(toSet: ISettingInputKnown, send?: boolean, doAfterSet?: boolean, caller?: any): Promise<number>
 export async function setSettings(toSet: IKeyVal<any>, send = true, doAfterSet = true, caller?: any) {
     for (const key in toSet) {
-        setSetting(key, toSet[key], false, false)
+        setSetting(key, toSet[key], false, false, caller)
     }
 
     if (doAfterSet) {
@@ -236,7 +239,7 @@ export async function sendSettings(settings: ISettingInputKnown) {
 }
 
 export function initSettings(val: ISettingInput) {
-    setSettings({ ...val, ...defaultSettings }, false)
+    setSettings({ ...defaultSettings, ...val }, false)
 }
 
 export class Settings {

@@ -24,6 +24,11 @@ function fixElement(el: HTMLElement) {
     if (el.tagName == 'INPUT') {
         stopKeyPropagation(el)
     }
+    if(el.tagName == 'INPUT' || el.tagName == 'SELECT'){
+        el.addEventListener('click',ev=>{
+            ev.stopPropagation()
+        })
+    }
 }
 
 export function getFirstTextByOuterID(id: string, addMissing = true) {

@@ -1,6 +1,6 @@
 import { TimingSelector, getOption } from './timingSelector'
 import { ISpeakerInput } from './types'
-import { createElement, fixTime, passStr, passStrNum, getElementByID } from './util'
+import { createElement, fixTime } from './util'
 import params from './params'
 
 const isView = typeof params.view != 'undefined'
@@ -10,9 +10,10 @@ export class Speaker {
     el: HTMLElement
     timeNode: Text
     nameNode: Text | HTMLInputElement
+    nameValue: string
     presetNode: Text | TimingSelector
     presetValue: string
-    constructor({ name, time, preset, id }: ISpeakerInput) {
+    constructor({ name, time, preset, id }: ISpeakerInput, onUpdate: (val: ISpeakerInput) => any) {
         this.id = id
         const speaker = createElement('div', { className: 'speaker' })
         const speakerTop = createElement('div', { className: 'speaker-top' })
@@ -23,6 +24,10 @@ export class Speaker {
         let nameInput: HTMLInputElement | Text
         let presetInput: TimingSelector | Text
 
+        const doUpdate = () => {
+            onUpdate({ id, name: this.nameValue, time: this.timeNode.data, preset: this.presetValue })
+        }
+
         if (isView) {
             nameInput = document.createTextNode(name ?? '')
             const opt = getOption(preset ?? 0, true)
@@ -32,9 +37,21 @@ export class Speaker {
         } else {
             nameInput = createElement('input')
             nameInput.value = name ?? ''
+            nameInput.setAttribute('autocorrect', 'off')
+            nameInput.setAttribute('spellcheck', 'false')
             presetInput = new TimingSelector(speakerPreset)
             this.presetValue = presetInput.get()
             presetInput.set(preset ?? 0)
+
+            nameInput.addEventListener('change', () => {
+                this.nameValue = this.getName()
+                doUpdate()
+            })
+
+            presetInput.el.addEventListener('change', () => {
+                this.presetValue = this.getPreset()
+                doUpdate()
+            })
         }
         speakerName.append(nameInput)
         speakerTime.append(timeText)
@@ -45,6 +62,7 @@ export class Speaker {
         this.el = speaker
         this.timeNode = timeText
         this.nameNode = nameInput
+        this.nameValue = name ?? ''
         this.presetNode = presetInput
     }
 
@@ -54,7 +72,7 @@ export class Speaker {
 
     setTime(val: string | number | undefined) {
         if (this.timeNode.data !== val) {
-            this.timeNode.data = fixTime(val)
+            this.timeNode.data = fixTime(val, '')
         }
     }
 
@@ -70,7 +88,7 @@ export class Speaker {
         if (this.nameNode instanceof Text) {
             this.nameNode.data = val
         } else {
-            this.nameNode.value = val
+            this.nameNode.value = this.nameValue = val
         }
     }
 
@@ -108,4 +126,9 @@ export class Speaker {
     unFocus() {
         this.el.classList.remove('inFocus')
     }
+}
+
+export function createSpeaker(onChange: (val: ISpeakerInput) => any) {
+    const id = Math.round(Math.random() * 0xffff)
+    return new Speaker({ id }, onChange)
 }

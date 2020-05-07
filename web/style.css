@@ -107,6 +107,7 @@ body {
 
 .speaker-top {
     display: flex;
+    min-height: 28px;
 }
 
 .speaker-preset {
@@ -150,6 +151,10 @@ img.rotate45 {
 
 .speaker:hover:not(.selected) {
     background-color: rgb(180, 180, 180);
+}
+
+#dropdown-users>.speaker.inFocus{
+    background-color: rgb(200, 255, 193);;
 }
 
 #dropdown-control {

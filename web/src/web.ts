@@ -3,6 +3,7 @@ import { setSettings, initSettings } from './settings';
 import uriBox from './uriBox'
 import controlBox from './controlBox'
 import params from './params'
+import userDropdown from './userDropdown';
 
 const isView = typeof params.view != 'undefined'
 let id = params.id ?? null
@@ -11,8 +12,9 @@ let serverTimeOffset = 0
 if (isView) {
     controlBox.hide()
     uriBox.hide()
+    userDropdown.hide()
 }
-
+(<any>window).userDropdown = userDropdown
 console.log({ id, isView, params })
 
 on('connect', init)
