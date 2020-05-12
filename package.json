@@ -6,7 +6,6 @@
   "bin": "src/index.js",
   "pkg": {
     "assets": [
-      "src/*.js",
       "web/*.html",
       "web/*.css",
       "web/*.js",
