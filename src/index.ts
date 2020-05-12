@@ -1,7 +1,6 @@
 import * as http from 'http'
 import * as socket from 'socket.io'
 import * as nodeStatic from 'node-static'
-import * as open from 'open'
 
 const params = getParams(['port', 'cache', 'one-id', 'open'], ['help', 'one-id', 'open'])
 let port = 8888
@@ -60,7 +59,11 @@ if (typeof params.help != 'undefined') {
     process.exit()
 }
 
-const fileServer = new nodeStatic.Server('./web', { cache })
+const dir = __dirname.split(/\\|\//)
+dir.pop()
+const webDir = dir.join('/') + "/web"
+
+const fileServer = new nodeStatic.Server(webDir, { cache })
 
 const web = http.createServer((req, res) => {
     req.addListener('end', () => {
@@ -79,13 +82,25 @@ web.listen(port, () => {
 
     if ('open' in params) {
         const openVal = params.open
+
         if (openVal != '') {
-            open(address, { app: openVal })
+            open(address, { app: openVal }).catch(e => { console.log('Can not Open') })
         } else {
-            open(address)
+            open(address).catch(e => { console.log('Can not Open') })
         }
     }
 })
+web.on('close', () => console.log('closing'))
+
+async function open(address: string, opt?: IKeyVal<string>) {
+    const open = await import('open')
+    if (opt != null) {
+        await open(address, opt)
+    } else {
+        await open(address)
+    }
+    console.log(`Opened '${address}'`)
+}
 
 io.on('connection', socket => {
     let userID: string
