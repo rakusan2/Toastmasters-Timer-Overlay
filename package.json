@@ -13,13 +13,14 @@
     ]
   },
   "scripts": {
+    "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && npm run build:prod",
     "build:dev": "webpack --config webpack.dev.js",
     "build:prod": "webpack --config webpack.prod.js",
-    "start": "node src/index.js",
-    "watch": "webpack --watch --config webpack.dev.js",
-    "dev": "npm run build:dev && npm start cache=false open",
-    "pack": "npm run build:prod && pkg . --out-path \"pkg\""
+    "watch:web": "webpack --watch --config webpack.dev.js",
+    "watch:ts": "ts-node-dev src/index.ts",
+    "pack": "npm run build && pkg . --out-path \"pkg\""
   },
   "keywords": [],
   "author": "",
@@ -40,6 +41,7 @@
     "webpack": "~4.43.0",
     "webpack-cli": "~3.3.11",
     "webpack-merge": "~4.2.2",
-    "pkg": "^4.4.8"
+    "pkg": "^4.4.8",
+    "ts-node-dev": "1.0.0-pre.44"
   }
 }
