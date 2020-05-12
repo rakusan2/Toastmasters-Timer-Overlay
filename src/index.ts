@@ -70,10 +70,9 @@ const web = http.createServer((req, res) => {
         fileServer.serve(req, res)
     }).resume()
 })
+
 const io = socket(web)
-
 const users: { [id: string]: IUser } = {}
-
 const sockets: IKeyVal<socket.Socket[]> = {}
 
 web.listen(port, () => {
@@ -91,16 +90,6 @@ web.listen(port, () => {
     }
 })
 web.on('close', () => console.log('closing'))
-
-async function open(address: string, opt?: IKeyVal<string>) {
-    const open = await import('open')
-    if (opt != null) {
-        await open(address, opt)
-    } else {
-        await open(address)
-    }
-    console.log(`Opened '${address}'`)
-}
 
 io.on('connection', socket => {
     let userID: string
@@ -120,7 +109,7 @@ io.on('connection', socket => {
 
     socket.on('disconnect', () => disconnect())
     socket.on('init', (id, fn: IResponseFn<IResponseInit>, ...args) => {
-        console.log({ init: { id, args } })
+        console.log({id, init: args })
         try {
             disconnect()
 
@@ -148,7 +137,7 @@ io.on('connection', socket => {
             } else console.log({ err })
         }
     }).on('set', (settings: IKeyVal<ISetting>, fn: IResponseFn<{ keysNotSet: string[] }>) => {
-        console.log({ set: { id: userID, settings } })
+        console.log({ id: userID, set: settings })
         user.lastMessageAt = Date.now()
         if (typeof user === 'undefined') {
             fn({ ok: false, err: 'ID not Set' })
@@ -175,7 +164,7 @@ io.on('connection', socket => {
             })
         }
     }).on('get', (keys: string | string[] | undefined, fn: IResponseFn<ISettings>) => {
-        console.log({ get: { id: userID, keys } })
+        console.log({ id: userID, get: keys })
         user.lastMessageAt = Date.now()
         if (typeof user === 'undefined') {
             fn({ ok: false, err: 'ID not Set' })
@@ -268,6 +257,16 @@ function getParams(names: string[] = [], flags: string[] = []) {
         }
     })
     return res
+}
+
+async function open(address: string, opt?: import('open').Options) {
+    const open = await import('open')
+    if (opt != null) {
+        await open(address, opt)
+    } else {
+        await open(address)
+    }
+    console.log(`Opened '${address}'`)
 }
 
 type IResponseFn<T = {}> = (res: IResponse<T>) => any
