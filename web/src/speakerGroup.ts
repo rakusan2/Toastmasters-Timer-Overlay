@@ -8,8 +8,9 @@ export class SpeakerGroup {
     container: HTMLDivElement
     inFocus: Speaker | null = null
     onChange: (val: ISpeakerInput) => any
+    onFocus: (id?: number) => any
 
-    constructor(container: string | HTMLDivElement, speakers?: ISpeakerInput[], public onFocus: (id?: number) => any = () => { }, onChange?: (val: ISpeakerInput) => any) {
+    constructor(container: string | HTMLDivElement, speakers?: ISpeakerInput[], onFocus: (id?: number) => any = () => { }, onChange?: (val: ISpeakerInput) => any) {
         this.container = typeof container === 'string' ? getElementByID(container, 'div') : container
 
         this.onChange = val => {
@@ -21,6 +22,13 @@ export class SpeakerGroup {
             speakerObj.name = val.name
             speakerObj.preset = val.preset
             if (onChange != null) onChange(val)
+        }
+        this.onFocus = id => {
+            if (typeof id === 'number') {
+                onFocus(this.getSpeakerPosition(id))
+            } else {
+                onFocus()
+            }
         }
 
         this.addMany(speakers)
@@ -38,7 +46,6 @@ export class SpeakerGroup {
                 speaker.el.onclick = ev => {
                     ev.stopPropagation()
                     this.toggleFocus(id)
-                    this.onFocus(this.inFocus != null ? this.getSpeakerPosition(id) : undefined)
                 }
                 if (append) this.container.append(speaker.el)
             } else {
@@ -49,7 +56,10 @@ export class SpeakerGroup {
     }
 
     addNew(position = -1) {
-        this.addOne(createSpeaker(this.onChange), position)
+        for (let create_try = 0; create_try < 10; create_try++) {
+            const newSpeaker = this.addOne(createSpeaker(this.onChange), position)
+            if (newSpeaker != null) return newSpeaker
+        }
     }
 
     addOne(speaker: ISpeakerInput, position = -1) {
@@ -64,7 +74,6 @@ export class SpeakerGroup {
             speaker.el.onclick = ev => {
                 ev.stopPropagation()
                 this.toggleFocus(id)
-                this.onFocus(this.inFocus != null ? this.getSpeakerPosition(id) : undefined)
             }
 
             if (position < 0 || position >= this.speakerObjects.length) {
@@ -74,6 +83,7 @@ export class SpeakerGroup {
                 this.container.insertBefore(speaker.el, this.container.children[position])
                 this.speakerObjects.splice(position, 0, speaker)
             }
+            return speaker
         } else {
             console.warn(`Speaker id ${id} already exists`)
         }
@@ -188,11 +198,11 @@ export class SpeakerGroup {
             }
             this.speakerObjects = this.speakerObjects.filter(a => !id.includes(a.id))
             if (this.inFocus != null && id.includes(this.inFocus.id)) {
-                this.inFocus = null
+                this.unFocus()
             }
         } else if (typeof this.speakers[id] != 'undefined') {
             if (this.inFocus != null && this.inFocus.id === id) {
-                this.inFocus = null
+                this.unFocus()
             }
             this.container.removeChild(this.speakers[id].el)
             delete this.speakers[id]
@@ -204,11 +214,11 @@ export class SpeakerGroup {
         const [speakerObj] = this.speakerObjects.splice(index, 1)
         const speaker = this.speakers[speakerObj.id]
         this.container.removeChild(speaker.el)
-        if (this.inFocus === speaker) this.inFocus = null
+        if (this.inFocus === speaker) this.unFocus()
         delete this.speakers[speakerObj.id]
     }
     removeAll() {
-        this.inFocus = null
+        this.unFocus()
         this.speakerObjects = []
         this.speakers = {}
         while (this.container.firstChild) {
@@ -228,7 +238,6 @@ export class SpeakerGroup {
     removeInFocus() {
         if (this.inFocus == null) return
         const id = this.inFocus.id
-        this.inFocus = null
         this.remove(id)
     }
 
@@ -241,6 +250,7 @@ export class SpeakerGroup {
             }
             this.inFocus = speaker
             speaker.focus()
+            this.onFocus(id)
         } else {
             this.unFocus()
         }
@@ -258,6 +268,7 @@ export class SpeakerGroup {
             }
             this.inFocus = speaker
             speaker.focus()
+            this.onFocus(id)
         } else {
             this.unFocus()
         }
@@ -272,8 +283,11 @@ export class SpeakerGroup {
     }
 
     unFocus() {
-        this.inFocus?.unFocus()
-        this.inFocus = null
+        if (this.inFocus != null) {
+            this.inFocus.unFocus()
+            this.inFocus = null
+            this.onFocus()
+        }
     }
 
     getSpeakerPosition(id: number) {
