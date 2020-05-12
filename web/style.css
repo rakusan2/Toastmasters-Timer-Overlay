@@ -127,6 +127,9 @@ body {
     font-weight: bold;
     font-size: 24px;
     font-family: 'Noto Sans TC', 'Open Sans';
+    border-bottom: 1px solid black;
+    width: 196px;
+    padding-left: 4px;
 }
 
 .speaker-time {
@@ -156,15 +159,26 @@ img.rotate45 {
 #dropdown-users>.speaker.inFocus{
     background-color: rgb(200, 255, 193);;
 }
-
 #dropdown-control {
     display: flex;
+}
+
+#dropdown-users>.speaker:first-child{
     border-top: 2px solid black;
 }
 
 #dropdown-control>div {
     width: 100%;
     padding: 10px 10px 5px 10px;
+}
+
+#dropdown-control img{
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 #dropdown-control>div:hover {
