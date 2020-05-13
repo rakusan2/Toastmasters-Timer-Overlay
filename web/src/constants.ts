@@ -1,5 +1,4 @@
 import { ISettingInputKnown } from './types'
-import params from './params'
 
 export const HOST = new URL(window.location.href).host
 
@@ -15,5 +14,5 @@ export const defaultSettings: Required<ISettingInputKnown> = {
     speakers: [],
     colorOverride: '',
     speakerIndex: -1,
-    speakersHide: 'view' in params
+    speakersHide: true
 }

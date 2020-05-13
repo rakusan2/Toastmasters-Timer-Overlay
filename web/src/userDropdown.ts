@@ -4,6 +4,8 @@ import { getElementByID, getInnerElement } from './util';
 import { SpeakerGroup } from './speakerGroup';
 import params from './params'
 
+const isView = 'view' in params
+
 class UserDropdown extends HidableControl {
     settings = new Settings()
 
@@ -20,7 +22,7 @@ class UserDropdown extends HidableControl {
         this.settings.set('speakers', this.speakers.speakerObjects, false)
     })
 
-    usersHidden = 'view' in params
+    usersHidden = true
 
     constructor(div: string | HTMLElement) {
         super(div)
@@ -45,8 +47,8 @@ class UserDropdown extends HidableControl {
         }
     }
 
-    hideSpeakers(val = this.usersHidden) {
-        this.usersHidden = val
+    hideSpeakers(val: boolean) {
+        this.settings.set('speakersHide', val)
 
     }
 
@@ -63,8 +65,13 @@ class UserDropdown extends HidableControl {
         this.speakers.focusAt(val ?? -1)
     })
     onSpeakerHide = this.settings.on('speakersHide', val => {
-        this.usersHidden = val ?? 'view' in params
-        this.imgHideArrow.classList.toggle('up', !this.usersHidden)
+        this.usersHidden = val ?? isView
+        if(isView){
+            this.controlDiv.classList.toggle('hideDrop', this.usersHidden)
+        }else{
+            this.imgHideArrow.classList.toggle('right', this.usersHidden)
+            this.imgHideArrow.classList.toggle('left', !this.usersHidden)
+        }
     })
 }
 

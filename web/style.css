@@ -10,6 +10,10 @@ body {
     background-color: rgb(255, 255, 255);
 }
 
+div{
+    overflow: hidden;
+}
+
 .red-bg {
     background-color: red;
 }
@@ -87,10 +91,15 @@ body {
 #dropdown {
     width: 400px;
     position: fixed;
-    right: 50px;
+    right: 0px;
     top: 0;
     font-size: 24px;
     z-index: 200;
+    transition: all 0.2s linear;
+}
+
+#dropdown.hideDrop{
+    right: -404px;
 }
 
 .speaker-time {
@@ -147,6 +156,10 @@ img{
 
 img.right {
     transform: rotate(-90deg);
+}
+
+img.left{
+    transform: rotate(90deg);
 }
 
 img.rotate45 {
