@@ -1,6 +1,7 @@
 import { getElementByID, isSettableColor } from './util'
 import { ISettableColours } from './types'
-import { onSetting } from './settings'
+import { onSetting, setSetting } from './settings'
+import { onKey, isPressed } from './keyboard'
 
 class Border {
     private currentColour: ISettableColours = 'white'
@@ -38,6 +39,21 @@ class Border {
 
     }
 
+    changeOverride = onKey(['1', '2', '3', 'g', 'y', 'r'], () => {
+        const greenKey = isPressed('1') || isPressed('b')
+        const yellowKey = isPressed('2') || isPressed('y')
+        const redKey = isPressed('3') || isPressed('r')
+
+        if (redKey) {
+            setSetting('colorOverride', 'red')
+        } else if (yellowKey) {
+            setSetting('colorOverride', 'yellow')
+        } else if (greenKey) {
+            setSetting('colorOverride', 'green')
+        } else {
+            setSetting('colorOverride', '')
+        }
+    })
 
     onOverride = onSetting('colorOverride', (val) => {
         if (isSettableColor(val) || val === '') {
