@@ -1,10 +1,11 @@
 import { HidableControl } from './control';
-import { onSetting, setSetting, setSettings } from './settings';
+import { Settings } from './settings';
 import { getElementByID } from './util';
 import { SpeakerGroup } from './speakerGroup';
 import params from './params'
 
 class UserDropdown extends HidableControl {
+    settings = new Settings()
 
     buttons = {
         hide: getElementByID('dropdown-arrow', 'div'),
@@ -13,9 +14,9 @@ class UserDropdown extends HidableControl {
     }
     buttonDiv = getElementByID('dropdown-control', 'div')
     speakers = new SpeakerGroup('dropdown-users', [], id => {
-        setSetting('speakerIndex', id ?? -1, true, true, this)
+        this.settings.set('speakerIndex', id ?? -1, false)
     }, _val => {
-        setSetting('speakers', this.speakers.speakerObjects, true, true, this)
+        this.settings.set('speakers', this.speakers.speakerObjects, false)
     })
 
     usersHidden = 'view' in params
@@ -25,7 +26,7 @@ class UserDropdown extends HidableControl {
 
         this.buttons.add.onclick = () => {
             this.speakers.addNew()
-            setSettings({ speakers: this.speakers.speakerObjects }, true, true, this)
+            this.settings.set('speakers', this.speakers.speakerObjects, false)
         }
 
         this.buttons.remove.onclick = () => {
@@ -34,11 +35,12 @@ class UserDropdown extends HidableControl {
             } else {
                 this.speakers.removeLast()
             }
-            setSettings({ speakers: this.speakers.speakerObjects }, true, true, this)
+            this.settings.set('speakers', this.speakers.speakerObjects, false)
         }
 
         this.buttons.hide.onclick = () => {
-            setSetting('speakersHide', !this.usersHidden)
+            this.settings.set('speakersHide', !this.usersHidden)
+            // TODO Put an animation on this
         }
     }
 
@@ -50,15 +52,18 @@ class UserDropdown extends HidableControl {
     hide(val = true) {
         this.buttonDiv.classList.toggle('hide', val)
     }
-    onSpeakers = onSetting('speakers', val => {
+    show() {
+        this.buttonDiv.classList.remove('hide')
+    }
+    onSpeakers = this.settings.on('speakers', val => {
         this.speakers.updateAll(val)
-    }, this)
-    onSpeakerIndex = onSetting('speakerIndex', val => {
+    })
+    onSpeakerIndex = this.settings.on('speakerIndex', val => {
         this.speakers.focusAt(val ?? -1)
-    }, this)
-    onSpeakerHide = onSetting('speakersHide', val => {
+    })
+    onSpeakerHide = this.settings.on('speakersHide', val => {
         this.usersHidden = val ?? 'view' in params
-    }, this)
+    })
 }
 
 export default new UserDropdown('dropdown')

@@ -167,7 +167,7 @@ export async function setSetting(key: string, value: any, send = true, doAfterSe
     if (key in settings && settings[key].funcs.some(a => a.fun.length > 0)) {
         settings[key].value = value
         settings[key].funcs.forEach(a => {
-            if(caller != null && a.caller === caller) return
+            if (caller != null && a.caller === caller) return
             a.fun.forEach(b => b(value, key))
         })
     } else {
@@ -211,11 +211,11 @@ function runAfterSet(keys: string[], caller?: any) {
 
     keys.forEach(key => {
         if (key in settings) {
-            if(caller == null){
-                settings[key].funcs.forEach(a=> addFuncs(a.afterSet))
+            if (caller == null) {
+                settings[key].funcs.forEach(a => addFuncs(a.afterSet))
             }
-            settings[key].funcs.forEach(a=>{
-                if(a.caller === caller)return
+            settings[key].funcs.forEach(a => {
+                if (a.caller === caller) return
                 addFuncs(a.afterSet)
             })
         }
@@ -226,16 +226,47 @@ function runAfterSet(keys: string[], caller?: any) {
 }
 
 export async function sendSettings(settings: ISettingInputKnown) {
-    const resp = await send('set', settings)
-    if (resp.ok) {
-        resp.keysNotSet.forEach(key => {
-            console.warn(`Key '${key}' was not set`)
+    const keysNotSet = await bachSend(settings)
+
+    keysNotSet.forEach(key => {
+        console.warn(`Key '${key}' was not set`)
+    })
+
+    return keysNotSet
+}
+
+let toSend: ISettingInputKnown | null = null
+let toSendCallbacks: { keys: string[], res: (val: string[]) => any, rej: (err: any) => any }[] = []
+
+function bachSend(settings: ISettingInputKnown) {
+    if (toSend == null) {
+        toSend = { ...settings }
+        setImmediate(() => {
+            const res = send('set', toSend)
+            const calls = toSendCallbacks
+            toSend = null
+            toSendCallbacks = []
+            res.then(val => {
+                if (val.ok) {
+                    for (let i = 0; i < calls.length; i++) {
+                        const { keys, res } = calls[i]
+                        res(keys.filter(a => val.keysNotSet.includes(a)))
+                    }
+                } else {
+                    console.error(val.err)
+                }
+            }).catch(val => {
+                calls.forEach(({ rej }) => {
+                    rej(val)
+                })
+            })
         })
-        return resp.keysNotSet
     } else {
-        console.error(resp.err)
+        toSend = { ...toSend, ...settings }
     }
-    return []
+    return new Promise<string[]>((res, rej) => {
+        toSendCallbacks.push({ keys: Object.keys(settings), res, rej })
+    })
 }
 
 export function initSettings(val: ISettingInput) {
@@ -245,5 +276,14 @@ export function initSettings(val: ISettingInput) {
 export class Settings {
     on<T extends keyof ISettingInputKnown>(key: T, fun: (val: ISettingInputKnown[T], key: T) => any): (val: ISettingInput[T], key: T) => any {
         return onSetting(key, fun, this)
+    }
+    set<T extends keyof ISettingInputKnown>(key: T, val: ISettingInputKnown[T], ignoreThis = true, send = true) {
+        return setSetting(key, val, send, true, ignoreThis ? undefined : this)
+    }
+    setMany(val: ISettingInputKnown, ignoreThis = false, send = true) {
+        return setSettings(val, send, true, ignoreThis ? undefined : this)
+    }
+    get(key: keyof ISettingInputKnown) {
+        return settings[key].value
     }
 }
