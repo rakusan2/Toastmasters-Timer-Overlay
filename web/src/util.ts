@@ -76,6 +76,26 @@ export function getFirstElementByClassName(name: string, tagName?: string | Docu
     return el
 }
 
+export function getInnerElement<K extends keyof HTMLElementTagNameMap>(el:HTMLElement, type:K, count?:number):HTMLElementTagNameMap[K]
+export function getInnerElement(el:HTMLElement, type?:string, count?:number):HTMLElement
+export function getInnerElement(el:HTMLElement, type?:string, count = 0):HTMLElement{
+    if(typeof count !== 'number' || Number.isNaN(count) || count < 0){
+        throw new Error('Invalid count. Expected a valid positive number')
+    }
+    const children = el.children
+    if(type != null) type = type.toUpperCase()
+    for(let i =0; i< children.length;i++){
+        const child = children[i]
+        if(type == null || child.tagName === type){
+            if(count === 0){
+                return child as HTMLElement
+            }else count--
+        }
+    }
+
+    throw new Error('Could not find Element')
+}
+
 export function createElement<K extends keyof HTMLElementTagNameMap>(tag: K, { className, id }: { className?: string | string[], id?: string } = {}): HTMLElementTagNameMap[K] {
     const el = document.createElement(tag)
     if (id != null) {

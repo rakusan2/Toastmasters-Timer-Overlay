@@ -138,6 +138,11 @@ body {
 
 img.up {
     transform: rotate(180deg);
+    transition: all 0.2s linear;
+}
+
+img{
+    transition: all 0.2s linear;
 }
 
 img.right {
@@ -163,7 +168,7 @@ img.rotate45 {
     display: flex;
 }
 
-#dropdown-users>.speaker:first-child{
+#dropdown-control:not(.hide)~#dropdown-users>.speaker:first-child{
     border-top: 2px solid black;
 }
 

@@ -1,6 +1,6 @@
 import { HidableControl } from './control';
 import { Settings } from './settings';
-import { getElementByID } from './util';
+import { getElementByID, getInnerElement } from './util';
 import { SpeakerGroup } from './speakerGroup';
 import params from './params'
 
@@ -12,6 +12,7 @@ class UserDropdown extends HidableControl {
         add: getElementByID('dropdown-add', 'div'),
         remove: getElementByID('dropdown-remove', 'div')
     }
+    imgHideArrow = getInnerElement(this.buttons.hide, 'img')
     buttonDiv = getElementByID('dropdown-control', 'div')
     speakers = new SpeakerGroup('dropdown-users', [], id => {
         this.settings.set('speakerIndex', id ?? -1, false)
@@ -63,6 +64,7 @@ class UserDropdown extends HidableControl {
     })
     onSpeakerHide = this.settings.on('speakersHide', val => {
         this.usersHidden = val ?? 'view' in params
+        this.imgHideArrow.classList.toggle('up', !this.usersHidden)
     })
 }
 
