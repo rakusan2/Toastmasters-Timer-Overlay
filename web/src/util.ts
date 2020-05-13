@@ -24,8 +24,8 @@ function fixElement(el: HTMLElement) {
     if (el.tagName == 'INPUT') {
         stopKeyPropagation(el)
     }
-    if(el.tagName == 'INPUT' || el.tagName == 'SELECT'){
-        el.addEventListener('click',ev=>{
+    if (el.tagName == 'INPUT' || el.tagName == 'SELECT') {
+        el.addEventListener('click', ev => {
             ev.stopPropagation()
         })
     }
@@ -33,24 +33,10 @@ function fixElement(el: HTMLElement) {
 
 export function getFirstTextByOuterID(id: string, addMissing = true) {
     const el = getElementByID(id)
-    const children = el.childNodes
-    for (let i = 0; i < children.length; i++) {
-        const child = children[i]
-        if (child instanceof Text) {
-            return child
-        }
-    }
-    if (addMissing) {
-        const child = document.createTextNode('')
-        el.append(child)
-        return child
-    } else {
-        throw new Error('No Text Found')
-    }
+    return getInnerText(el, addMissing)
 }
 
-export function getFirstElementByClassName(name: string): HTMLElement
-export function getFirstElementByClassName(name: string, parent: Document | HTMLElement): HTMLElement
+export function getFirstElementByClassName(name: string, parent?: Document | HTMLElement): HTMLElement
 export function getFirstElementByClassName<K extends keyof HTMLElementTagNameMap>(name: string, tagName: K): HTMLElementTagNameMap[K]
 export function getFirstElementByClassName<K extends keyof HTMLElementTagNameMap>(name: string, tagName: K, parent: Document | HTMLElement): HTMLElementTagNameMap[K]
 export function getFirstElementByClassName(name: string, tagName?: string | Document | HTMLElement, parent: Document | HTMLElement = document) {
@@ -70,30 +56,52 @@ export function getFirstElementByClassName(name: string, tagName?: string | Docu
     }
 
     if (typeof tagName == 'string' && el.tagName != tagName.toUpperCase()) {
-        throw new Error(`Invalid TagName. Got ${el.tagName} Expected ${tagName.toUpperCase()}`)
+        throw new Error(`Invalid TagName. Got ${el.tagName.toLowerCase()} Expected ${tagName}`)
     }
 
     return el
 }
 
-export function getInnerElement<K extends keyof HTMLElementTagNameMap>(el:HTMLElement, type:K, count?:number):HTMLElementTagNameMap[K]
-export function getInnerElement(el:HTMLElement, type?:string, count?:number):HTMLElement
-export function getInnerElement(el:HTMLElement, type?:string, count = 0):HTMLElement{
-    if(typeof count !== 'number' || Number.isNaN(count) || count < 0){
+export function getInnerElement<K extends keyof HTMLElementTagNameMap>(el: HTMLElement, type: K, count?: number): HTMLElementTagNameMap[K]
+export function getInnerElement(el: HTMLElement, type?: string, count?: number): HTMLElement
+export function getInnerElement(el: HTMLElement, type?: string, count = 0): HTMLElement {
+    if (typeof count !== 'number' || Number.isNaN(count) || count < 0) {
         throw new Error('Invalid count. Expected a valid positive number')
     }
     const children = el.children
-    if(type != null) type = type.toUpperCase()
-    for(let i =0; i< children.length;i++){
+    if (type != null) type = type.toUpperCase()
+    for (let i = 0; i < children.length; i++) {
         const child = children[i]
-        if(type == null || child.tagName === type){
-            if(count === 0){
+        if (type == null || child.tagName === type) {
+            if (count === 0) {
                 return child as HTMLElement
-            }else count--
+            } else count--
         }
     }
 
     throw new Error('Could not find Element')
+}
+
+export function getInnerText(el: HTMLElement, addMissing = true, count = 0): Text {
+    if (typeof count !== 'number' || Number.isNaN(count) || count < 0) {
+        throw new Error('Invalid count. Expected a valid positive number')
+    }
+    const children = el.childNodes
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i]
+        if (child instanceof Text) {
+            if (count === 0) {
+                return child
+            } else count--
+        }
+    }
+    if (addMissing) {
+        const val = document.createTextNode('')
+        el.append(val)
+        return val
+    } else {
+        throw new Error('Text Element not found')
+    }
 }
 
 export function createElement<K extends keyof HTMLElementTagNameMap>(tag: K, { className, id }: { className?: string | string[], id?: string } = {}): HTMLElementTagNameMap[K] {
