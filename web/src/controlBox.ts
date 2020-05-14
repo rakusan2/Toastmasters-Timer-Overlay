@@ -4,6 +4,7 @@ import { onSetting, afterSetting, setSetting, setSettings } from './settings';
 import { TimingSelector } from './timingSelector';
 import timeInput from './timeInputs'
 import border from './border'
+import { onKeyDown } from './keyboard';
 
 class ControlBox extends HidableControl {
     timerStart = 0
@@ -66,6 +67,10 @@ class ControlBox extends HidableControl {
             timeInput.set(intervals)
         }
     }
+
+    onStartKey = onKeyDown('k',()=>{
+        this.onStartButton()
+    })
 
     updateStartButtonText = afterSetting(['timerStart', 'timerStop'], () => {
         const text = this.button.start.firstChild as Text
