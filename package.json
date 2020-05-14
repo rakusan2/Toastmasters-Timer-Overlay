@@ -14,7 +14,7 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "dev": "npm run watch:ts",
+    "dev": "npm run watch:ts cache=false",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && npm run build:prod",
     "build:dev": "webpack --config webpack.dev.js",
