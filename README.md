@@ -38,12 +38,25 @@ OBS will hide the background
 ### To run from source:
 1. Download
     - [NodeJS](https://nodejs.org/en/)
-    - [Typescript](https://www.typescriptlang.org/)
 2. Run
     1. `npm install`
-    2. `tsc`
+    2. `npm run build`
 3. Start the application with `npm start`
 4. Continua from step 3 of Usage above
+
+-----
+
+### To Develop:
+1. Requirement
+    - [NodeJS](https://nodejs.org/en/)
+2. Install dependencies
+    - `npm install`
+3. Start webpack in dev mode
+    - `npm run watch:web`
+4. Start with ts-server with cache disabled
+    - `npm run dev`
+5. Open a browser at `localhost:8888`
+    - Optionally the port can be changed by adding `port={number}` to the run dev command
 
 -----
 
