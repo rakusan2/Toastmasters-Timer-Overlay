@@ -42,7 +42,7 @@ OBS will hide the background
     1. `npm install`
     2. `npm run build`
 3. Start the application with `npm start`
-4. Continua from step 3 of Usage above
+4. Continue from step 3 of Usage above
 
 -----
 
