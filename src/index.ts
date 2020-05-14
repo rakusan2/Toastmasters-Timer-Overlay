@@ -96,7 +96,8 @@ io.on('connection', socket => {
     let user: IUser
 
     function logUserCount(id = userID) {
-        console.log(`ID ${id} has ${sockets[id].length} users`)
+        const count = sockets[id].length
+        console.log(`ID ${id} has ${count} user${count === 1 ? '' : 's'}`)
     }
 
     function disconnect() {
@@ -109,13 +110,13 @@ io.on('connection', socket => {
 
     socket.on('disconnect', () => disconnect())
     socket.on('init', (id, fn: IResponseFn<IResponseInit>, ...args) => {
-        console.log({id, init: args })
+        console.log({ id, init: args })
         try {
             disconnect()
 
             userID = initUser(id)
             user = users[userID]
-            console.log({ user, userID })
+            console.log({ userID, user })
 
             if (typeof sockets[userID] === 'undefined') {
                 sockets[userID] = [socket]
@@ -195,7 +196,7 @@ function initUser(id?: string | null) {
     } else if (id == null) {
         id = getID()
     }
-    if ((typeof id === 'string') && /^[a-zA-Z0-9_-]{1,6}$/.test(id)) {
+    if ((typeof id === 'string') && /^[a-zA-Z0-9_\-]{1,6}$/.test(id)) {
         if (typeof users[id] === 'undefined') {
             users[id] = { lastMessageAt: Date.now(), settings: {} }
         }
