@@ -193,7 +193,7 @@ io.on('connection', socket => {
 function initUser(id?: string | null) {
     if (typeof oneID == 'string') {
         id = oneID
-    } else if (id == null) {
+    } else if (id == null || id === '') {
         id = getID()
     }
     if ((typeof id === 'string') && /^[a-zA-Z0-9_\-]{1,6}$/.test(id)) {
@@ -201,7 +201,7 @@ function initUser(id?: string | null) {
             users[id] = { lastMessageAt: Date.now(), settings: {} }
         }
         return id
-    } else throw 'Invalid ID'
+    } else throw `'${id}' is an invalid ID`
 }
 
 function getID() {
@@ -220,7 +220,7 @@ const URL_BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
 function getRandomStr64(len: number) {
     let res = ''
     for (let i = 0; i < len; i++) {
-        const index = Math.round(Math.random() * URL_BASE64.length)
+        const index = Math.round(Math.random() * (URL_BASE64.length - 1))
         res += URL_BASE64[index]
     }
     return res
