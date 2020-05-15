@@ -42,6 +42,7 @@ export class Speaker {
             presetInput = new TimingSelector(speakerPreset)
             this.presetValue = presetInput.get()
             presetInput.set(preset ?? 0)
+            nameInput.placeholder = "Speaker Name"
 
             nameInput.addEventListener('change', () => {
                 this.nameValue = this.getName()
