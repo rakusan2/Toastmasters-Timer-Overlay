@@ -43,6 +43,7 @@ div{
     margin: 0;
     overflow: hidden;
     z-index: 100;
+    transition: all 0.2s linear
 }
 
 #left-border, #right-border {
@@ -60,8 +61,8 @@ div{
 }
 
 #top-border, #bottom-border {
-    left: 0;
-    right: 0;
+    left: 40px;
+    right: 40px;
     height: 40px;
 }
 
@@ -152,6 +153,10 @@ img.up {
 
 img{
     transition: all 0.2s linear;
+}
+
+#dropdown ::placeholder{
+    color: rgb(146, 146, 146);
 }
 
 img.right {
