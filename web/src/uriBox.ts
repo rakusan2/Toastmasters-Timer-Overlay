@@ -1,21 +1,19 @@
 import { HidableControl } from './control';
-import { getElementByID } from './util';
+import { getElementByID, getInnerText, clipboardCopy } from './util';
 import { HOST } from './constants';
 
 class URIBox extends HidableControl {
-    idDiv: HTMLInputElement
-    copyButton: HTMLButtonElement
+    idDiv = getElementByID('urlId', 'input')
+    copyButton = getElementByID('copyLink', 'button')
 
     constructor(val: string | HTMLDivElement) {
         super(val)
-        this.idDiv = getElementByID('urlId', 'input')
-        this.copyButton = getElementByID('copyLink', 'button')
+
+        const urlText = getInnerText(this.controlDiv)
+        urlText.data = `${location.host}?view&id=`
 
         this.copyButton.onclick = async () => {
-            const perm = await navigator?.permissions?.query?.({ name: 'clipboard-write' } as any)
-            if (perm.state === 'granted' || perm.state === 'prompt') {
-                navigator.clipboard.writeText(`${HOST}?view&id=${this.idDiv.value}`)
-            }
+            await clipboardCopy(`${HOST}?view&id=${this.idDiv.value}`)
         }
     }
     setID(val: string) {

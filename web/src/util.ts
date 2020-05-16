@@ -256,3 +256,21 @@ export function passStrNum(val: any) {
         return void 0
     }
 }
+
+export async function clipboardCopy(data:string){
+    if(navigator.clipboard){
+        const perm = await navigator.permissions.query?.({ name: 'clipboard-write' as any })
+        if (perm.state === 'granted' || perm.state === 'prompt') {
+            await navigator.clipboard.writeText(data)
+        } else {
+            console.warn({ state:perm.state })
+        }
+    }else{
+        const node = document.createElement('input')
+        node.value = data
+        document.body.append(node)
+        node.select()
+        document.execCommand('copy')
+        node.remove()
+    }
+}
