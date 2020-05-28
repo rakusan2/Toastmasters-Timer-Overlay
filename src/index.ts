@@ -1,6 +1,7 @@
 import * as http from 'http'
 import * as socket from 'socket.io'
 import * as nodeStatic from 'node-static'
+import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings } from './types'
 
 const params = getParams(['port', 'cache', 'one-id', 'open'], ['help', 'one-id', 'open'])
 let port = 8888
@@ -269,29 +270,3 @@ async function open(address: string, opt?: import('open').Options) {
     }
     console.log(`Opened '${address}'`)
 }
-
-type IResponseFn<T = {}> = (res: IResponse<T>) => any
-
-type IResponse<T = {}> = IResponseERR | (IResponseOK & T)
-
-interface IUser extends ISettings {
-    lastMessageAt: number
-}
-interface IResponseERR {
-    ok: false
-    err: string
-}
-interface IResponseOK {
-    ok: true
-}
-interface IResponseInit extends ISettings {
-    id: string
-    idLock: boolean
-    serverTime: number
-}
-interface ISettings {
-    settings: IKeyVal<ISetting>
-}
-type IKeyVal<T> = { [key: string]: T }
-type IKeyNVal<T> = { [key: number]: T }
-type ISetting = string | number | boolean
