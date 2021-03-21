@@ -18,20 +18,26 @@ OBS will hide the background
         - [Mac](https://github.com/johnboiles/obs-mac-virtualcam)
         - [Linux](https://github.com/umlaeute/v4l2loopback)
         - [Alternate Linux](https://github.com/CatxFish/obs-v4l2sink)
-2. Run the Timer Overlay
-3. Open a browser window at [localhost:8888](localhost:8888)
-4. Click **Copy Link**
-5. Open OBS Studio
-6. Setup your video in OBS
+1. Run the Timer Overlay
+1. Open a browser window at [localhost:8888](localhost:8888)
+1. Click **Copy Link**
+1. Open OBS Studio
+1. Setup your video in OBS
     1. Sources -> Add -> Video Capture Device
-    2. Click the image and resize and move it to your liking
-7. Add Browser Capture
+    1. Click the image and resize and move it to your liking
+1. Add Browser Capture
     1. Sources -> Add -> Browser
-    2. Paste the copied link
-8. Start VirtualCam
+    1. Paste the copied link
+1. Start VirtualCam
     1. (Top Bar) -> Tools -> VirtualCam -> Start
-9. Change your Video Source to OBS-Camera
+1. Change your Video Source to OBS-Camera
     - In Zoom: Settings -> Video -> Camera -> OBS-Camera
+1. There are two ways to test it.
+   1. select `Test` from drop down
+   2. press hot key
+      - `1`, or `g` : Green
+      - `2`, or `y` : Yellow
+      - `3`, or `r` : Red
 
 ------
 
