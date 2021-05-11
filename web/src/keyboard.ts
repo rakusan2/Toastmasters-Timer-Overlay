@@ -1,7 +1,10 @@
 import { IKeyVal } from './types'
 
+//type functionEnabler =  {disable():any, enable():any, isEnabled:Readonly<boolean>}
 type keyAnyFun = (down: boolean, ev: KeyboardEvent) => any
+//type keyAnyFunRet = keyAnyFun & functionEnabler
 type keyFun = (ev: KeyboardEvent) => any
+//type keyFunRet = keyFun & functionEnabler
 
 const handlers: IKeyVal<{ down?: { fun: keyFun, repeat: boolean }, up?: keyFun, any?: { fun: keyAnyFun, repeat: boolean } }> = {}
 
@@ -139,7 +142,14 @@ function callHandlers(keys: string[], down: boolean, ev: KeyboardEvent) {
     const chars = keys.filter(a => a.length === 1)
     const callable = new Set<keyFun>()
     const callableBoth = new Set<keyAnyFun>()
-    
+    const { tagName } = (ev.target as HTMLElement) ?? {}
+
+    if(tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') return
+
+    if (!isRepeat) {
+        console.log({ key: ev.key.toLowerCase(), down })
+    }
+
     for (let i = 0; i < chars.length; i++) {
         const res = [...control, chars[i]].join()
         if (typeof handlers[res] != 'undefined') {

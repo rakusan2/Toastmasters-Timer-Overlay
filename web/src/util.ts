@@ -1,4 +1,4 @@
-import { IBadTimeInput, IKeyVal, ITimePreset, ISettableColours } from './types'
+import { IBadTimeInput, IKeyVal, ITimePreset, ISettableColours, ITimePresetMs } from './types'
 
 const timeFormat = /(\d{1,2}):(\d{1,2})/
 
@@ -21,9 +21,6 @@ export function getElementByID(id: string, tagName?: string) {
 }
 
 function fixElement(el: HTMLElement) {
-    if (el.tagName == 'INPUT') {
-        stopKeyPropagation(el)
-    }
     if (el.tagName == 'INPUT' || el.tagName == 'SELECT') {
         el.addEventListener('click', ev => {
             ev.stopPropagation()
@@ -184,12 +181,12 @@ export function minSecToMS(val: string) {
     }
 }
 
-export function timePresetStringToMs(val: ITimePreset): { [P in keyof ITimePreset]: number } {
+export function timePresetStringToMs(val: ITimePreset): ITimePresetMs {
     return {
         green: minSecToMS(val.green),
         yellow: minSecToMS(val.yellow),
         red: minSecToMS(val.red),
-        overtime: minSecToMS(val.overtime)
+        overtime: minSecToMS(val.overtime),
     }
 }
 
@@ -197,9 +194,9 @@ export function fixedDigits(num: number, count: number) {
     return num.toFixed(0).padStart(count, '0')
 }
 
-export function msToMinSecStr(totalMs: number) {
+export function msToMinSecStr(totalMs: number, subMs = 0) {
 
-    const totalSec = Math.floor(totalMs / 1000)
+    const totalSec = Math.floor((totalMs - subMs) / 1000)
     const sec = totalSec % 60
     const min = Math.floor(totalSec / 60)
 
@@ -223,9 +220,15 @@ export function isSettableColor(val: any): val is ISettableColours {
 }
 
 let nextFrameFuncs: ((time: number) => any)[] = []
-export function requestNextFrame(fun: (time: number) => any) {
+
+export function requestNextFrame(): Promise<number>
+export function requestNextFrame(fun: (time: number) => any): void
+export function requestNextFrame(fun?: (time: number) => any): void | Promise<number> {
+    if (typeof fun != 'function') {
+        return new Promise<number>(res => requestNextFrame(res))
+    }
     if (nextFrameFuncs.includes(fun)) {
-        return
+        throw new Error('Duplicate Function')
     }
     const isFirst = nextFrameFuncs.length == 0
 
@@ -235,14 +238,22 @@ export function requestNextFrame(fun: (time: number) => any) {
         window.requestAnimationFrame(time => {
             const toRun = nextFrameFuncs
             nextFrameFuncs = []
-            toRun.forEach(fun => {
-                fun(time)
-            })
+
+            for (let i = 0; i < toRun.length; i++) {
+                toRun[i](time)
+            }
         })
     }
 }
 export function passStr(val: any) {
     if (typeof val == 'string') {
+        return val
+    } else {
+        return void 0
+    }
+}
+export function passNum(val: any) {
+    if (typeof val == 'number') {
         return val
     } else {
         return void 0
@@ -257,15 +268,15 @@ export function passStrNum(val: any) {
     }
 }
 
-export async function clipboardCopy(data:string){
-    if(navigator.clipboard){
+export async function clipboardCopy(data: string) {
+    if (navigator.clipboard) {
         const perm = await navigator.permissions.query?.({ name: 'clipboard-write' as any })
         if (perm.state === 'granted' || perm.state === 'prompt') {
             await navigator.clipboard.writeText(data)
         } else {
-            console.warn({ state:perm.state })
+            console.warn({ state: perm.state })
         }
-    }else{
+    } else {
         const node = document.createElement('input')
         node.value = data
         document.body.append(node)

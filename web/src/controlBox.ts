@@ -72,6 +72,10 @@ class ControlBox extends HidableControl {
         this.onStartButton()
     })
 
+    onEscKey = onKeyDown('esc',()=>{
+        this.onResetButton()
+    })
+
     updateStartButtonText = afterSetting(['timerStart', 'timerStop'], () => {
         const text = this.button.start.firstChild as Text
         let val = ''
@@ -94,7 +98,7 @@ class ControlBox extends HidableControl {
         this.refreshTimeInput()
     }, this)
 
-    refresh = afterSetting(['timerStart', 'timerStop', 'presetTime', 'timerGreen', 'timerYellow', 'timerRed', 'timerOvertime'], () => {
+    refresh = afterSetting(['timerStart', 'timerStop', 'presetTime', 'timerGreen', 'timerYellow', 'timerRed', 'timerOvertime'], async () => {
         if (this.timerStart === 0) {
             this.readout.data = '00:00'
             border.colour = 'white'
@@ -122,7 +126,8 @@ class ControlBox extends HidableControl {
         }
 
         if (this.timerStart > 0 && this.timerStop == 0) {
-            requestNextFrame(() => this.refresh())
+            await requestNextFrame()
+            this.refresh()
         }
     }, this)
 

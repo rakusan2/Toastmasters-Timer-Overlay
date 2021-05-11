@@ -1,6 +1,6 @@
 import { Speaker, createSpeaker } from './speaker'
 import { ISpeakerInput } from './types'
-import { getElementByID, passStr, passStrNum } from './util'
+import { getElementByID, passStr, passStrNum, passNum } from './util'
 
 export class SpeakerGroup {
     speakers: { [id: number]: Speaker } = {}
@@ -97,19 +97,18 @@ export class SpeakerGroup {
         const cleaned = cleanSpeaker(val)
         if (cleaned == null) throw new Error('Invalid Input')
 
-        const { name, id, preset, time } = cleaned
+        const { name, id, preset, timeStart, timeStop } = cleaned
 
         const speakerObj = this.speakerObjects.find(a => a.id === id)
         const speaker = this.speakers[id]
         if (speakerObj == null || speaker == null) throw new Error('Non-Existent speaker')
 
-        speaker.setName(name)
-        speaker.setPreset(preset)
-        speaker.setTime(time)
+        speaker.update(val)
 
         speakerObj.name = name
         speakerObj.preset = preset
-        speakerObj.time = time
+        speakerObj.timeStart = timeStart
+        speakerObj.timeStop = timeStop
     }
 
     updateAll(speakers: any) {
@@ -297,8 +296,8 @@ export class SpeakerGroup {
 
 function cleanSpeaker(obj: any): ISpeakerInput | undefined {
     if (obj != null && typeof obj === 'object' && typeof obj.id === 'number') {
-        const { id, name, time, preset } = obj
-        return { id, name: passStr(name), time: passStrNum(time), preset: passStrNum(preset) }
+        const { id, name, timeStart, timeStop, preset } = obj as { [P in keyof ISpeakerInput]: any }
+        return { id, name: passStr(name), timeStart: passNum(timeStart), timeStop: passNum(timeStop), preset: passStrNum(preset) }
     }
 }
 function cleanSpeakerArr(obj: any): ISpeakerInput[] {
@@ -357,7 +356,8 @@ function diffSpeakers(original: ISpeakerInput[], secondary: ISpeakerInput[]): ID
             const originalSpeaker = originalChangedSpeakers[originalIndex]
             let addedChange = originalSpeaker.name != secondarySpeaker.name
                 || originalSpeaker.preset != secondarySpeaker.preset
-                || originalSpeaker.time != secondarySpeaker.time
+                || originalSpeaker.timeStart != secondarySpeaker.timeStart
+                || originalSpeaker.timeStop != secondarySpeaker.timeStop
 
             if (addedChange) {
                 change.push(secondarySpeaker)

@@ -46,6 +46,12 @@ export const timePresets = fixTimeMap({
         red: '1:00',
         overtime: '1:00'
     },
+    '5TOut': {
+        green: '5:00',
+        yellow: '5:00',
+        red: '5:00',
+        overtime: '5:00'
+    },
     'Test': {
         green: '0:05',
         yellow: '0:10',
@@ -59,28 +65,28 @@ onSetting('timerGreen', (val) => {
     if (time != null) {
         customPreset.green = time
     }
-},timePresets)
+}, timePresets)
 
 onSetting('timerYellow', (val) => {
     const time = fixTime(val, null)
     if (time != null) {
         customPreset.yellow = time
     }
-},timePresets)
+}, timePresets)
 
 onSetting('timerRed', (val) => {
     const time = fixTime(val, null)
     if (time != null) {
         customPreset.red = time
     }
-},timePresets)
+}, timePresets)
 
 onSetting('timerOvertime', (val) => {
     const time = fixTime(val, null)
     if (time != null) {
         customPreset.overtime = time
     }
-},timePresets)
+}, timePresets)
 
 export function getTimeIntervals(key: string) {
     if (key === 'Custom') {

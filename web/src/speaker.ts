@@ -1,6 +1,6 @@
 import { TimingSelector, getOption } from './timingSelector'
 import { ISpeakerInput } from './types'
-import { createElement, fixTime } from './util'
+import { createElement, fixTime, msToMinSecStr } from './util'
 import params from './params'
 
 const isView = typeof params.view != 'undefined'
@@ -9,39 +9,43 @@ export class Speaker {
     id: number
     el: HTMLElement
     timeNode: Text
+    timeStart: number
+    timeStop: number
     nameNode: Text | HTMLInputElement
     nameValue: string
     presetNode: Text | TimingSelector
     presetValue: string
-    constructor({ name, time, preset, id }: ISpeakerInput, onUpdate: (val: ISpeakerInput) => any) {
+    constructor({ name = '', timeStart = 0, timeStop = 0, preset = 0, id }: ISpeakerInput, onUpdate: (val: ISpeakerInput) => any) {
         this.id = id
+        this.timeStart = timeStart
+        this.timeStop = timeStop
         const speaker = createElement('div', { className: 'speaker' })
         const speakerTop = createElement('div', { className: 'speaker-top' })
         const speakerTime = createElement('div', { className: 'speaker-time' })
         const speakerName = createElement('div', { className: 'speaker-name' })
         const speakerPreset = createElement('div', { className: 'speaker-preset' })
-        const timeText = document.createTextNode(fixTime(time, ''))
+        const timeText = document.createTextNode(hiddenTimeStr(timeStop, timeStart))
         let nameInput: HTMLInputElement | Text
         let presetInput: TimingSelector | Text
 
         const doUpdate = () => {
-            onUpdate({ id, name: this.nameValue, time: this.timeNode.data, preset: this.presetValue })
+            onUpdate({ id, name: this.nameValue, timeStart: this.timeStart, timeStop: this.timeStop, preset: this.presetValue })
         }
 
         if (isView) {
-            nameInput = document.createTextNode(name ?? '')
-            const opt = getOption(preset ?? 0, true)
+            nameInput = document.createTextNode(name)
+            const opt = getOption(preset, true)
             this.presetValue = opt.value
             presetInput = document.createTextNode(opt.text)
             speakerPreset.append(presetInput)
         } else {
             nameInput = createElement('input')
-            nameInput.value = name ?? ''
+            nameInput.value = name
             nameInput.setAttribute('autocorrect', 'off')
             nameInput.setAttribute('spellcheck', 'false')
             presetInput = new TimingSelector(speakerPreset)
             this.presetValue = presetInput.get()
-            presetInput.set(preset ?? 0)
+            presetInput.set(preset)
             nameInput.placeholder = "Speaker Name"
 
             nameInput.addEventListener('change', () => {
@@ -63,7 +67,7 @@ export class Speaker {
         this.el = speaker
         this.timeNode = timeText
         this.nameNode = nameInput
-        this.nameValue = name ?? ''
+        this.nameValue = name
         this.presetNode = presetInput
     }
 
@@ -115,7 +119,7 @@ export class Speaker {
 
     update(val: ISpeakerInput) {
         if (this.id !== val.id) return
-        this.setTime(val.time)
+        this.setTime(hiddenTimeStr(val.timeStop, val.timeStart))
         this.setName(val.name)
         this.setPreset(val.preset)
     }
@@ -132,4 +136,12 @@ export class Speaker {
 export function createSpeaker(onChange: (val: ISpeakerInput) => any) {
     const id = Math.round(Math.random() * 0xffff)
     return new Speaker({ id }, onChange)
+}
+
+function hiddenTimeStr(stop = 0, start = 0) {
+    if (start > 0 && stop > start) {
+        return msToMinSecStr(stop, start)
+    } else {
+        return ''
+    }
 }

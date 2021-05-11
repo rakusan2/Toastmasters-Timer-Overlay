@@ -86,7 +86,7 @@ export class TimingSelector {
             return null
         }
 
-        return timePresetStringToMs(intervals)
+        return this.intervalCache.ms = timePresetStringToMs(intervals)
     }
 
     isCustom() {

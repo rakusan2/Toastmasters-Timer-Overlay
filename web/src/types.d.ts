@@ -76,7 +76,8 @@ declare global {
 export interface ISpeakerInput {
     id: number
     name?: string
-    time?: string | number
+    timeStart?: number
+    timeStop?: number
     preset?: string | number
 }
 

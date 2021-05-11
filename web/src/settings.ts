@@ -4,8 +4,8 @@ import { defaultSettings } from './constants'
 
 const afterSet: (() => any)[] = []
 const settings: IKeyVal<{ value: any, funcs: { afterSet: (() => any)[], fun: ((value: any, key: string) => any)[], caller: any }[] }> = {}
-
-export function onSetting<T extends keyof ISettingInputKnown>(key: T, fun: (val: ISettingInputKnown[T], key: T) => any, caller: any): (val: ISettingInput[T], key: T) => any
+type setFun<T extends keyof ISettingInputKnown,K> = (val: ISettingInputKnown[T], key: T) => K
+export function onSetting<T extends keyof ISettingInputKnown,K>(key: T, fun: setFun<T,K>, caller: any): setFun<T,K>
 export function onSetting(keys: IMayArr<ISettingKeys>, fun: (val: any, key: string) => any, caller: any): (val: any, key: string) => any {
 
     function add(key: string) {
@@ -76,8 +76,8 @@ export function onSetting(keys: IMayArr<ISettingKeys>, fun: (val: any, key: stri
 //     }
 // }
 
-export function afterSetting(fun: () => any, caller: any): () => any
-export function afterSetting(keys: IMayArr<ISettingKeys>, fun: () => any, caller: any): () => any
+export function afterSetting<T>(fun: () => T, caller: any): () => T
+export function afterSetting<T>(keys: IMayArr<ISettingKeys>, fun: () => T, caller: any): () => T
 export function afterSetting(keys: IMayArr<ISettingKeys> | (() => any) | null, fun: () => any | any, caller?: any): () => any {
     function addFun(key: ISettingKeys, fun: () => any) {
         if (typeof settings[key] == 'undefined') {
