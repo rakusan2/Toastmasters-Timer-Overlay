@@ -1,11 +1,12 @@
 import * as http from 'http'
+import handler = require('serve-handler')
 import * as socket from 'socket.io'
-import * as nodeStatic from 'node-static'
+import { IServeHandler } from './serverTypes'
 import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings } from './types'
 
 const params = getParams(['port', 'cache', 'one-id', 'open'], ['help', 'one-id', 'open'])
 let port = 8888
-let cache: number | boolean = 3600
+let cache: string | boolean = '3600'
 let oneID: string | null = null
 
 if ('port' in params) {
@@ -21,7 +22,7 @@ if ('cache' in params) {
     if (tempCache.toLowerCase() === 'false') {
         cache = false
     } else if (!Number.isNaN(+tempCache)) {
-        cache = +tempCache
+        cache = tempCache
     } else {
         console.warn(`Invalid Cache Time. Got ${params.cache}`)
     }
@@ -64,12 +65,28 @@ const dir = __dirname.split(/\\|\//)
 dir.pop()
 const webDir = dir.join('/') + "/web"
 
-const fileServer = new nodeStatic.Server(webDir, { cache })
+const handlerConfig: IServeHandler = {
+    public: webDir,
+    cleanUrls: true,
+    unlisted: [
+        "src",
+        "tsconfig.json"
+    ]
+}
+
+if (cache) {
+    handlerConfig.headers = [
+        {
+            source: '*',
+            headers: [
+                { key: 'Cache-Control', value: `max-age=cache` }
+            ]
+        }
+    ]
+}
 
 const web = http.createServer((req, res) => {
-    req.addListener('end', () => {
-        fileServer.serve(req, res)
-    }).resume()
+    return handler(req, res, handlerConfig)
 })
 
 const io = socket(web)
@@ -82,14 +99,10 @@ web.listen(port, () => {
 
     if ('open' in params) {
         const openVal = params.open
-
-        if (openVal != '') {
-            open(address, { app: openVal }).catch(e => { console.log('Can not Open') })
-        } else {
-            open(address).catch(e => { console.log('Can not Open') })
-        }
+        open(address, openVal == '' ? undefined : { app: openVal }).catch(() => console.log('Can not Open'))
     }
 })
+
 web.on('close', () => console.log('closing'))
 
 io.on('connection', socket => {
