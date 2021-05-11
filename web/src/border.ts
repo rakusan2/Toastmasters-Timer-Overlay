@@ -40,7 +40,7 @@ class Border {
     }
 
     changeOverride = onKey(['1', '2', '3', 'g', 'y', 'r'], () => {
-        const greenKey = isPressed('1') || isPressed('b')
+        const greenKey = isPressed('1') || isPressed('g')
         const yellowKey = isPressed('2') || isPressed('y')
         const redKey = isPressed('3') || isPressed('r')
 
