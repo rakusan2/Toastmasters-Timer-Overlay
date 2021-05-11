@@ -111,8 +111,8 @@ function fixKeyStr(key: string) {
 
     const rest = parts.filter(a => a.length == 0 || !(['shift', 'alt', 'ctrl', 'control'].includes(a)))
 
-    if (rest.some(a => a.length > 1)) {
-        throw new Error(`Unknown key '${rest.find(a => a.length > 1)}'`)
+    if (rest.some(a => a.length > 3)) {
+        throw new Error(`Unknown key '${rest.find(a => a.length > 3)}'`)
     }
     res.push(...rest.sort())
 

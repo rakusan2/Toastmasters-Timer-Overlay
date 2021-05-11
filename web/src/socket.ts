@@ -1,5 +1,5 @@
 import { ISocketResponse, IResponse, IResponseERR, ISocketListener } from './types'
-
+import io from "socket.io-client";
 const socket = io()
 export function send<T extends keyof ISocketResponse>(key: T, ...values: any[]) {
     return new Promise<ISocketResponse[T]>((res, rej) => {

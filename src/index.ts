@@ -1,6 +1,6 @@
 import * as http from 'http'
 import handler = require('serve-handler')
-import * as socket from 'socket.io'
+import { Server, Socket } from 'socket.io'
 import { IServeHandler } from './serverTypes'
 import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings } from './types'
 
@@ -89,9 +89,9 @@ const web = http.createServer((req, res) => {
     return handler(req, res, handlerConfig)
 })
 
-const io = socket(web)
+const io = new Server(web)
 const users: { [id: string]: IUser } = {}
-const sockets: IKeyVal<socket.Socket[]> = {}
+const sockets: IKeyVal<Socket[]> = {}
 
 web.listen(port, () => {
     const address = `http://localhost:${port}`
@@ -99,7 +99,7 @@ web.listen(port, () => {
 
     if ('open' in params) {
         const openVal = params.open
-        open(address, openVal == '' ? undefined : { app: openVal }).catch(() => console.log('Can not Open'))
+        open(address, openVal == '' ? undefined : { app: { name: openVal } }).catch(() => console.log('Can not Open'))
     }
 })
 
