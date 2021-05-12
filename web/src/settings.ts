@@ -4,8 +4,8 @@ import { defaultSettings } from './constants'
 
 const afterSet: (() => any)[] = []
 const settings: IKeyVal<{ value: any, funcs: { afterSet: (() => any)[], fun: ((value: any, key: string) => any)[], caller: any }[] }> = {}
-type setFun<T extends keyof ISettingInputKnown,K> = (val: ISettingInputKnown[T], key: T) => K
-export function onSetting<T extends keyof ISettingInputKnown,K>(key: T, fun: setFun<T,K>, caller: any): setFun<T,K>
+type setFun<T extends keyof ISettingInputKnown, K> = (val: ISettingInputKnown[T], key: T) => K
+export function onSetting<T extends keyof ISettingInputKnown, K>(key: T, fun: setFun<T, K>, caller: any): setFun<T, K>
 export function onSetting(keys: IMayArr<ISettingKeys>, fun: (val: any, key: string) => any, caller: any): (val: any, key: string) => any {
 
     function add(key: string) {
@@ -241,7 +241,7 @@ let toSendCallbacks: { keys: string[], res: (val: string[]) => any, rej: (err: a
 function bachSend(settings: ISettingInputKnown) {
     if (toSend == null) {
         toSend = { ...settings }
-        setImmediate(() => {
+        setTimeout(() => {
             const res = send('set', toSend)
             const calls = toSendCallbacks
             toSend = null
@@ -260,7 +260,7 @@ function bachSend(settings: ISettingInputKnown) {
                     rej(val)
                 })
             })
-        })
+        }, 0)
     } else {
         toSend = { ...toSend, ...settings }
     }
