@@ -1,65 +1,68 @@
 import * as http from 'http'
 import { platform } from 'os'
+import * as args from 'command-line-args'
 import handler = require('serve-handler')
 import { Server, Socket } from 'socket.io'
 import { IServeHandler } from './serverTypes'
-import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings } from './types'
+import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings, IOptions } from './types'
 
-const params = getParams(['port', 'cache', 'one-id', 'open', 'obs', 'obj-profile', 'obs-scene'], ['help', 'one-id', 'open', 'obs', 'obs-min'])
-let port = 8888
-let cache: string | boolean = '3600'
-let oneID: string | null = null
+const { server: serverOptions, obs: obsOptions } = args([
+    { name: 'port', alias: 'p', type: Number, defaultOption: true, group: 'server', defaultValue: 8888 },
+    { name: 'cache', alias: 'c', type: boolOrString('3600'), defaultOption: true, group: 'server' },
+    { name: 'one-id', alias: 'i', type: defaultOnSetOrTrue('aaaa'), defaultOption: true, group: 'server' },
+    { name: 'open', alias: 'o', type: Boolean, group: 'server' },
+    { name: 'obs', alias: 's', type: defaultOnSetOrTrue(true), group: 'obs' },
+    { name: 'profile', group: 'obs' },
+    { name: 'scene', group: 'obs' },
+    { name: 'minimize', type: Boolean, group: 'obs' }
+], { caseInsensitive: true }) as IOptions
 
-if ('port' in params) {
-    let tempPort = +params.port
-    if (!Number.isNaN(tempPort)) {
-        port = tempPort
-    } else {
-        console.warn(`Invalid Port Number. Got ${params.port}`)
-    }
-}
-if ('cache' in params) {
-    let tempCache = params.cache
-    if (tempCache.toLowerCase() === 'false') {
-        cache = false
-    } else if (!Number.isNaN(+tempCache)) {
-        cache = tempCache
-    } else {
-        console.warn(`Invalid Cache Time. Got ${params.cache}`)
-    }
+function trueOrString(val: string | null) {
+    if (val == null) return true
+    return val
 }
 
-if ('one-id' in params) {
-    const val = params['one-id'].toLowerCase()
-    if (val == '') {
-        oneID = 'aaaa'
-    } else if (val == 'false' || val == 'true') {
-        oneID = (val == 'true' ? 'aaaa' : null)
-    } else {
-        try {
-            oneID = encodeURIComponent(params['one-id'])
-            if (oneID.length > 6) {
-                oneID = 'aaaa'
-                console.warn('The ID is too long. Setting id to "aaaa"')
-            }
-            if (oneID.includes('%')) {
-                oneID = 'aaaa'
-                console.warn('Invalid id. Setting id to "aaaa"')
-            }
-        } catch (err) {
+function boolOrString(defaultVal: string | boolean) {
+    return (val: string | null) => {
+        if (val == null) return defaultVal
+        const tempVal = val.toLowerCase()
+        if (tempVal === 'false') return false
+        if (tempVal === 'true') return true
+        return val
+    }
+}
+function defaultOnSetOrTrue<T>(defaultVal: T) {
+    return (val: string | null) => {
+        if (val == null) return defaultVal
+        const tempVal = val.toLowerCase()
+        if (tempVal === 'true') return defaultVal
+        if (tempVal === 'false') return void 0
+        return val
+    }
+}
+
+const { port, cache } = serverOptions
+let oneID = serverOptions['one-id']
+
+if (typeof cache === 'string' && Number.isNaN(+cache)) {
+    console.warn(`Invalid Cache Time. Got ${cache}`)
+}
+
+if (oneID != null) {
+    try {
+        oneID = encodeURIComponent(oneID)
+        if (oneID.length > 6) {
             oneID = 'aaaa'
-            console.error('That Id could hurt someone')
+            console.warn('The ID is too long. Setting id to "aaaa"')
         }
+        if (oneID.includes('%')) {
+            oneID = 'aaaa'
+            console.warn('Invalid id. Setting id to "aaaa"')
+        }
+    } catch (err) {
+        oneID = 'aaaa'
+        console.error('That Id could hurt someone')
     }
-}
-
-if (typeof params.help != 'undefined') {
-    console.log(`Run with [port] [cache] [one-id]
-    [port] sets the Port number to listen on. Default 8888. Parameter is required.
-    [cache] sets how many seconds the browser should cache the site for. Default 3600. Parameter is required.
-    [one-id] sets whether or not the server sets all ids to "aaaa". Default false
-    [open] Opens browser window`)
-    process.exit()
 }
 
 const dir = __dirname.split(/\\|\//)
@@ -99,17 +102,17 @@ web.listen(port, () => {
     const address = `http://localhost:${port}`
     console.log(`listening at ${address} with cache set to ${cache}`)
 
-    if ('open' in params) {
-        const openVal = params.open
+    if (serverOptions.open != null) {
+        const openVal = serverOptions.open
         open(address, openVal == '' ? undefined : { app: { name: openVal } }).catch(() => console.log('Can not Open'))
     }
-    if ('obs' in params) {
+    if (obsOptions.obs != null) {
         openOBS({
-            path: params.obs,
-            profile: params['obs-profile'],
-            scene: params['obs-scene'],
-            min: params['obs-min']?.toLowerCase() === 'true'
-        }).catch(console.error)
+            path: (typeof obsOptions.obs === 'string') ? obsOptions.obs : void 0,
+            profile: obsOptions.profile,
+            scene: obsOptions.scene,
+            min: obsOptions.minimize
+        }).catch(err => console.error('Unable to launch OBS\nPlease pass in the path to the OBS executable or install OBS\nhttps://obsproject.com/download'))
     }
 })
 
@@ -297,14 +300,14 @@ async function open(address: string, opt?: import('open').Options) {
 const obsPath: { [key: string]: string } = {
     win32: 'C:/Program Files/obs-studio/bin/64bit/obs64.exe',
     linux: 'obs', //TODO Change to correct location
-    darwin: 'obs' //TODO Change to correct location
+    darwin: '/Applications/OBS.app/Contents/MacOS/OBS'
 }
 
 async function openOBS({ path, profile, scene, min }: { path?: string, profile?: string, scene?: string, min?: boolean } = {}) {
     if (path == null || path == '') {
         const os = platform()
         path = obsPath[os]
-        if (path == null) throw new Error('Unsupported platform ' + os)
+        if (path == null) throw new Error(`The platform ${os} does not have a default path`)
     }
 
     let command = path + ' --startvirtualcam'
