@@ -1,10 +1,11 @@
 import * as http from 'http'
+import { platform } from 'os'
 import handler = require('serve-handler')
 import { Server, Socket } from 'socket.io'
 import { IServeHandler } from './serverTypes'
 import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings } from './types'
 
-const params = getParams(['port', 'cache', 'one-id', 'open'], ['help', 'one-id', 'open'])
+const params = getParams(['port', 'cache', 'one-id', 'open', 'obs', 'obj-profile', 'obs-scene'], ['help', 'one-id', 'open', 'obs', 'obs-min'])
 let port = 8888
 let cache: string | boolean = '3600'
 let oneID: string | null = null
@@ -68,6 +69,7 @@ const webDir = dir.join('/') + "/web"
 const handlerConfig: IServeHandler = {
     public: webDir,
     cleanUrls: true,
+    etag: true,
     unlisted: [
         "src",
         "tsconfig.json"
@@ -79,7 +81,7 @@ if (cache) {
         {
             source: '*',
             headers: [
-                { key: 'Cache-Control', value: `max-age=cache` }
+                { key: 'Cache-Control', value: `max-age=${cache}` }
             ]
         }
     ]
@@ -100,6 +102,14 @@ web.listen(port, () => {
     if ('open' in params) {
         const openVal = params.open
         open(address, openVal == '' ? undefined : { app: { name: openVal } }).catch(() => console.log('Can not Open'))
+    }
+    if ('obs' in params) {
+        openOBS({
+            path: params.obs,
+            profile: params['obs-profile'],
+            scene: params['obs-scene'],
+            min: params['obs-min']?.toLowerCase() === 'true'
+        }).catch(console.error)
     }
 })
 
@@ -282,4 +292,46 @@ async function open(address: string, opt?: import('open').Options) {
         await open(address)
     }
     console.log(`Opened '${address}'`)
+}
+
+const obsPath: { [key: string]: string } = {
+    win32: 'C:/Program Files/obs-studio/bin/64bit/obs64.exe',
+    linux: 'obs', //TODO Change to correct location
+    darwin: 'obs' //TODO Change to correct location
+}
+
+async function openOBS({ path, profile, scene, min }: { path?: string, profile?: string, scene?: string, min?: boolean } = {}) {
+    if (path == null || path == '') {
+        const os = platform()
+        path = obsPath[os]
+        if (path == null) throw new Error('Unsupported platform ' + os)
+    }
+
+    let command = path + ' --startvirtualcam'
+
+    if (profile != null && profile.length > 0) {
+        if (profile.includes('"')) throw new Error('profile has "')
+        command += ` --profile "${profile}"`
+    }
+    if (scene != null && scene.length > 0) {
+        if (scene.includes('"')) throw new Error('scene has "')
+        command += ` --scene "${scene}"`
+    }
+    if (min === true) {
+        command += ` --minimize-to-tray`
+    }
+
+    return await cmd(command)
+}
+
+function cmd(command: string) {
+    return new Promise<string>((res, rej) => {
+        import('child_process').then(cp => {
+            cp.exec(command, { windowsHide: true }, (err, data) => {
+                if (err != null) {
+                    rej(err)
+                } else res(data)
+            })
+        }).catch(rej)
+    })
 }
