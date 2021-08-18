@@ -1,4 +1,5 @@
-import { TimingSelector, getOption } from './timingSelector'
+import { TimingSelector } from './timingSelector'
+import { getTimeIntervals, getTimeIntervalsEntry } from './timeIntervals'
 import { ISpeakerInput } from './types'
 import { createElement, fixTime, msToMinSecStr } from './util'
 import params from './params'
@@ -34,9 +35,9 @@ export class Speaker {
 
         if (isView) {
             nameInput = document.createTextNode(name)
-            const opt = getOption(preset, true)
-            this.presetValue = opt.value
-            presetInput = document.createTextNode(opt.text)
+            const { key, value } = getTimeIntervalsEntry(preset, true)
+            this.presetValue = key
+            presetInput = document.createTextNode(value.fullName)
             speakerPreset.append(presetInput)
         } else {
             nameInput = createElement('input')
@@ -108,9 +109,9 @@ export class Speaker {
     setPreset(val: string | number = 0) {
         if (this.presetValue === val) return
         if (this.presetNode instanceof Text) {
-            const opt = getOption(val, true)
-            this.presetValue = opt.value
-            this.presetNode.data = opt.text
+            const { key, value } = getTimeIntervalsEntry(val, true)
+            this.presetValue = key
+            this.presetNode.data = value.fullName
         } else {
             this.presetNode.set(val)
             this.presetValue = this.presetNode.get()

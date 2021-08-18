@@ -7,7 +7,6 @@ import userDropdown from './userDropdown';
 
 const isView = typeof params.view != 'undefined'
 let id = params.id ?? null
-let serverTimeOffset = 0
 
 if (isView) {
     controlBox.hide()
@@ -37,7 +36,6 @@ async function init() {
     const res = await send('init', id)
     if (res.ok) {
         const lastId = id
-        serverTimeOffset = Date.now() - res.serverTime
         id = res.id
         if (lastId != id) {
             history.replaceState({ id }, document.title, `?${isView ? 'view&' : ''}id=${id}`)
@@ -48,8 +46,4 @@ async function init() {
     } else {
         console.error(res.err)
     }
-}
-
-Date.serverNow = function() {
-    return this.now() - serverTimeOffset
 }

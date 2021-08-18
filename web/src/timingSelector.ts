@@ -1,11 +1,10 @@
-import { getElementByID, collectionToArray, timePresetStringToMs } from './util'
-import { getTimeIntervals } from './timeIntervals'
+import { getElementByID, collectionToArray, timePresetStringToMs, createElement } from './util'
+import { getTimeIntervals, customPreset, timePresets } from './timeIntervals'
 import { ITimePresetMs, ITimePreset } from './types'
 
-const selectorTemplate = getElementByID('timeSelectionTemplate', 'template')
-const selectorOptions = collectionToArray((selectorTemplate.content.firstElementChild as HTMLSelectElement).options)
 export class TimingSelector {
     el: HTMLSelectElement
+    options: HTMLOptionElement[]
     intervalCache: { str?: ITimePreset, ms?: ITimePresetMs } = {}
 
     constructor(appendTo: HTMLElement | string, prepend = false) {
@@ -19,6 +18,7 @@ export class TimingSelector {
             throw new Error('Invalid Element')
         }
         this.el = getNewSelector()
+        this.options = collectionToArray(this.el.children, 'option')
         if (prepend) {
             div.prepend(this.el)
         } else {
@@ -27,21 +27,22 @@ export class TimingSelector {
         this.el.addEventListener('change', () => {
             this.clearCache()
         })
-        this.el.addEventListener('click', ev=>{
+        this.el.addEventListener('click', ev => {
             ev.stopPropagation()
         })
     }
     getOption(index: number | string) {
-        return getOption(index)
+        if (typeof index === 'number') return this.options[index]
+        return this.options.find(a => a.value === index)
     }
 
     getOptionValue(index: number | string) {
-        const opt = getOption(index)
+        const opt = this.getOption(index)
         return opt?.value
     }
 
     getOptionText(index: number | string) {
-        const opt = getOption(index)
+        const opt = this.getOption(index)
         return opt?.text
     }
 
@@ -114,44 +115,13 @@ export class TimingSelector {
     }
 }
 export function getNewSelector() {
-    const fragment = selectorTemplate.content.cloneNode(true) as DocumentFragment
-    const el = fragment.firstElementChild
-
-    if (el == null) {
-        throw new Error('Template is Empty')
-    }
-    if (el.tagName != 'SELECT') {
-        throw new Error('Template is missing Selector')
-    }
-    return el as HTMLSelectElement
-}
-export function getOption(index: number | string, assert?: true, options?: HTMLOptionElement[]): HTMLOptionElement
-export function getOption(index: number | string, assert: false, options?: HTMLOptionElement[]): null | HTMLOptionElement
-export function getOption(index: number | string, assert = false, options = selectorOptions): null | HTMLOptionElement {
-    if (typeof index === 'number') {
-        if (Number.isNaN(index)) {
-            if (assert) {
-                throw new Error(`The Option '${index}' does not exist`)
-            }
-            return null
-        }
-        if (index < options.length) {
-            return options[index]
-        }
-    } else {
-        const opt = options.find(el => el.value == index)
-        if (opt != null) {
-            return opt
-        }
-        if (/^\d+$/.test(index)) {
-            return getOption(+index)
-        }
-    }
-    if (assert) {
-        throw new Error(`The Option '${index}' does not exist`)
-    }
-    return null
-}
-export function getTimingString(val: number | string) {
-    return getOption(val)?.text ?? ''
+    const select = createElement('select')
+    let options = Object.keys(timePresets).map(key => {
+        const val = timePresets[key]
+        const opt = createElement('option', { value: key, innerText: val.fullName })
+        return opt
+    })
+    select.append(...options)
+    select.append(createElement('option', { value: 'Custom', innerText: customPreset.fullName }))
+    return select
 }

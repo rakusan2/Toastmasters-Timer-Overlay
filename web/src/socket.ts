@@ -1,4 +1,4 @@
-import { ISocketResponse, IResponse, IResponseERR, ISocketListener } from './types'
+import { ISocketResponse, IResponseERR, ISocketListener } from './types'
 import io from "socket.io-client";
 const socket = io()
 export function send<T extends keyof ISocketResponse>(key: T, ...values: any[]) {
@@ -16,6 +16,6 @@ export function send<T extends keyof ISocketResponse>(key: T, ...values: any[]) 
     })
 }
 
-export function on<T extends keyof ISocketListener>(key: T, fun: (...val: ISocketListener[T]) => any) {
+export function on(key: string, fun: (...val: any[]) => any) {
     socket.on(key, fun)
 }

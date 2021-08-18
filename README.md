@@ -13,11 +13,6 @@ OBS will hide the background
 1. Download 
     - [release version](https://github.com/rakusan2/Toastmasters-Timer-Overlay/releases/)
     - [OBS Studio](https://obsproject.com/)
-    - OBS VirtualCam
-        - [Windows](https://obsproject.com/forum/resources/obs-virtualcam.539/)
-        - [Mac](https://github.com/johnboiles/obs-mac-virtualcam)
-        - [Linux](https://github.com/umlaeute/v4l2loopback)
-        - [Alternate Linux](https://github.com/CatxFish/obs-v4l2sink)
 1. Run the Timer Overlay
 1. Open a browser window at [localhost:8888](localhost:8888)
 1. Click **Copy Link**
@@ -29,15 +24,13 @@ OBS will hide the background
     1. Sources -> Add -> Browser
     1. Paste the copied link
 1. Start VirtualCam
-    1. (Top Bar) -> Tools -> VirtualCam -> Start
+    1. Controls -> Start Virtual Camera
 1. Change your Video Source to OBS-Camera
-    - In Zoom: Settings -> Video -> Camera -> OBS-Camera
-1. There are two ways to test it.
-   1. select `Test` from drop down
-   2. press hot key
-      - `1`, or `g` : Green
-      - `2`, or `y` : Yellow
-      - `3`, or `r` : Red
+    - In Zoom: Settings -> Video -> Camera -> OBS Virtual Camera
+1. To test it press hot key
+    - `1`, or `g` : Green
+    - `2`, or `y` : Yellow
+    - `3`, or `r` : Red
 
 ------
 

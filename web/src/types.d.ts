@@ -31,7 +31,7 @@ export type ISetting = ISettingSimple | IMayArr<IKeyVal<ISettingSimple>>
 export type IFn<T, K = any> = (val: T) => K
 export type IBadTimeInput = string | number | null | undefined
 
-export type ISettingInput = ISettingInputKnown | IKeyVal<number | string | undefined | IMayArr<ISpeakerInput>>
+export type ISettingInput = ISettingInputKnown | IKeyVal<number | string | undefined | ISpeakerInput>
 
 export interface ISettingInputKnown {
     timerStart?: number
@@ -43,7 +43,7 @@ export interface ISettingInputKnown {
     speakerName?: string
     presetTime?: number | string
     colorOverride?: string
-    speakers?: IMayArr<ISpeakerInput>
+    speakers?: ISpeakerInput[]
     speakerIndex?: number
     speakersHide?: boolean
 }
@@ -57,6 +57,7 @@ export type ISettingControl = Required<{
 }>
 
 export interface ITimePreset {
+    fullName: string
     red: string
     green: string
     yellow: string
@@ -64,13 +65,7 @@ export interface ITimePreset {
 }
 
 export type ITimePresetMs = {
-    [P in keyof ITimePreset]: number
-}
-
-declare global {
-    interface DateConstructor {
-        serverNow(): number
-    }
+    [P in keyof ITimePreset]: P extends 'fullName' ? string : number
 }
 
 export interface ISpeakerInput {

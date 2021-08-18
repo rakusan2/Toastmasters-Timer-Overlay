@@ -101,10 +101,17 @@ export function getInnerText(el: HTMLElement, addMissing = true, count = 0): Tex
     }
 }
 
-export function createElement<K extends keyof HTMLElementTagNameMap>(tag: K, { className, id }: { className?: string | string[], id?: string } = {}): HTMLElementTagNameMap[K] {
+export function createElement<K extends keyof HTMLElementTagNameMap>(tag: K, { className, id, value, innerText }: { className?: string | string[], id?: string, value?: string, innerText?: string } = {}): HTMLElementTagNameMap[K] {
     const el = document.createElement(tag)
     if (id != null) {
         el.id = id
+    }
+    if ('value' in el && value != null) {
+        (<any>el).value = value
+    }
+    if (innerText != null) {
+        const text = document.createTextNode(innerText)
+        el.append(text)
     }
     if (className != null) {
         if (Array.isArray(className)) {
@@ -117,24 +124,28 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(tag: K, { c
     return el
 }
 
-export function collectionToArray<T extends Element>(col: HTMLCollectionOf<T>) {
+export function collectionToArray<T extends Element>(col: HTMLCollectionOf<T>):T[]
+export function collectionToArray<K extends keyof HTMLElementTagNameMap>(col: HTMLCollectionOf<Element>, tagName: K): HTMLElementTagNameMap[K][]
+export function collectionToArray<T extends Element>(col: HTMLCollectionOf<T>, tagName?: string) {
     const len = col.length
     const res: T[] = []
+    const testName = tagName?.toUpperCase()
 
     for (let i = 0; i < len; i++) {
         const el = col.item(i)
-        if (el != null) {
+        if (el != null && (testName == null || el.tagName === testName)) {
             res.push(el)
         }
     }
     return res
 }
 
-export function fixTimeMap(presets: IKeyVal<{ [P in keyof ITimePreset]: IBadTimeInput }>): IKeyVal<ITimePreset> {
+export function fixTimeMap(presets: IKeyVal<{ [P in keyof ITimePreset]: P extends 'fullName' ? string : IBadTimeInput }>): IKeyVal<ITimePreset> {
     const res: IKeyVal<ITimePreset> = {}
     for (let key in presets) {
-        const { green, yellow, red, overtime } = presets[key]
+        const { fullName, green, yellow, red, overtime } = presets[key]
         res[key] = {
+            fullName,
             green: fixTime(green),
             yellow: fixTime(yellow),
             red: fixTime(red),
@@ -183,6 +194,7 @@ export function minSecToMS(val: string) {
 
 export function timePresetStringToMs(val: ITimePreset): ITimePresetMs {
     return {
+        fullName: val.fullName,
         green: minSecToMS(val.green),
         yellow: minSecToMS(val.yellow),
         red: minSecToMS(val.red),

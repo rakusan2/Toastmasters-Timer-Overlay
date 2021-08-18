@@ -10,7 +10,7 @@ const commonConfig = {
             {
                 test: /\.tsx?$/,
                 use: 'ts-loader',
-                exclude: /node_modules|index.*$/
+                exclude: /index.*$/
             }
         ]
     },
