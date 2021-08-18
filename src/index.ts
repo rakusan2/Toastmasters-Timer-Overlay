@@ -1,56 +1,43 @@
 import * as http from 'http'
 import { platform } from 'os'
-import * as args from 'command-line-args'
 import handler = require('serve-handler')
 import { Server, Socket } from 'socket.io'
 import { IServeHandler } from './serverTypes'
 import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings, IOptions } from './types'
 
-const { server: serverOptions, obs: obsOptions } = args([
-    { name: 'port', alias: 'p', type: Number, defaultOption: true, group: 'server', defaultValue: 8888 },
-    { name: 'cache', alias: 'c', type: boolOrString('3600'), defaultOption: true, group: 'server' },
-    { name: 'one-id', alias: 'i', type: defaultOnSetOrTrue('aaaa'), defaultOption: true, group: 'server' },
-    { name: 'open', alias: 'o', type: Boolean, group: 'server' },
-    { name: 'obs', alias: 's', type: defaultOnSetOrTrue(true), group: 'obs' },
-    { name: 'profile', group: 'obs' },
-    { name: 'scene', group: 'obs' },
-    { name: 'minimize', type: Boolean, group: 'obs' }
-], { caseInsensitive: true }) as IOptions
 
-function trueOrString(val: string | null) {
-    if (val == null) return true
-    return val
-}
+const params = getParams(['port', 'cache', 'one-id', 'open', 'obs', 'obs-profile', 'obs-scene'],['one-id', 'open', 'obs', 'obs-minimize'])
+let port = 8888
+let cache:null|string = '3600'
+let oneID:null | string = null
 
-function boolOrString(defaultVal: string | boolean) {
-    return (val: string | null) => {
-        if (val == null) return defaultVal
-        const tempVal = val.toLowerCase()
-        if (tempVal === 'false') return false
-        if (tempVal === 'true') return true
-        return val
+
+if('port' in params){
+    const temp = params.port
+    const num = +temp
+    if(Number.isSafeInteger(num) && num > 0) port = num
+    else{
+        console.warn(`Invalid Port. Got ${temp}`)
     }
 }
-function defaultOnSetOrTrue<T>(defaultVal: T) {
-    return (val: string | null) => {
-        if (val == null) return defaultVal
-        const tempVal = val.toLowerCase()
-        if (tempVal === 'true') return defaultVal
-        if (tempVal === 'false') return void 0
-        return val
+if ('cache' in params) {
+    const temp = params.cache.toLowerCase()
+    if(temp === 'false') cache == null
+    else if(temp === 'true'){}
+    else{
+        const num = +temp
+        if(Number.isSafeInteger(num) && num > 0) cache = temp
+        else{
+            console.warn(`Invalid Cache Time. Got ${cache}`)
+        }
     }
 }
 
-const { port, cache } = serverOptions
-let oneID = serverOptions['one-id']
+if ('one-id' in params) {
+    const temp = params['one-id']
 
-if (typeof cache === 'string' && Number.isNaN(+cache)) {
-    console.warn(`Invalid Cache Time. Got ${cache}`)
-}
-
-if (oneID != null) {
     try {
-        oneID = encodeURIComponent(oneID)
+        oneID = encodeURIComponent(temp)
         if (oneID.length > 6) {
             oneID = 'aaaa'
             console.warn('The ID is too long. Setting id to "aaaa"')
@@ -102,16 +89,16 @@ web.listen(port, () => {
     const address = `http://localhost:${port}`
     console.log(`listening at ${address} with cache set to ${cache}`)
 
-    if (serverOptions.open != null) {
-        const openVal = serverOptions.open
-        open(address, openVal == '' ? undefined : { app: { name: openVal } }).catch(() => console.log('Can not Open'))
+    if (params.open != null) {
+        const openVal = params.open
+        open(address, openVal === '' ? undefined : { app: { name: openVal } }).catch(() => console.log('Can not Open'))
     }
-    if (obsOptions.obs != null) {
+    if (params.obs != null) {
         openOBS({
-            path: (typeof obsOptions.obs === 'string') ? obsOptions.obs : void 0,
-            profile: obsOptions.profile,
-            scene: obsOptions.scene,
-            min: obsOptions.minimize
+            path: (typeof params.obs === 'string') ? params.obs : void 0,
+            profile: params['obs-profile'],
+            scene: params['obs-scene'],
+            min: params['obs-minimize'] != null
         }).catch(err => console.error('Unable to launch OBS\nPlease pass in the path to the OBS executable or install OBS\nhttps://obsproject.com/download'))
     }
 })
