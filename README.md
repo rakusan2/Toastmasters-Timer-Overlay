@@ -64,6 +64,10 @@ OBS will hide the background
 - **Cache** [number or false] How long the client should cache the page for
 - **One-Id** [string, boolean on nothing] Forces all ids to be the passed string or the string `aaaa` if true or nothing is passed
 - **Open** [string or Nothing] Opens a browser window with optional parameter being the browser to open with
+- **OBS** [string or Nothing] Opens OBS with Virtual Camera enabled
+- **OBS-Profile** [string] Sets OBS Profile
+- **OBS-Scene** [string] Sets OBS Scene
+- **OBS-Minimize** [Nothing] Sets OBS minimize on start to true
 
 The arguments `port=80 cache=false one-id=true`
 
