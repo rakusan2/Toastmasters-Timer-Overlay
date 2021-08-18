@@ -3,7 +3,7 @@ import { platform } from 'os'
 import handler = require('serve-handler')
 import { Server, Socket } from 'socket.io'
 import { IServeHandler } from './serverTypes'
-import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings, IOptions } from './types'
+import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings } from './types'
 
 
 const params = getParams(['port', 'cache', 'one-id', 'open', 'obs', 'obs-profile', 'obs-scene'],['one-id', 'open', 'obs', 'obs-minimize'])
