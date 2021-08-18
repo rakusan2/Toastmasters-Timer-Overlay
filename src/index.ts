@@ -6,28 +6,28 @@ import { IServeHandler } from './serverTypes'
 import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings } from './types'
 
 
-const params = getParams(['port', 'cache', 'one-id', 'open', 'obs', 'obs-profile', 'obs-scene'],['one-id', 'open', 'obs', 'obs-minimize'])
+const params = getParams(['port', 'cache', 'one-id', 'open', 'obs', 'obs-profile', 'obs-scene'], ['one-id', 'open', 'obs', 'obs-minimize'])
 let port = 8888
-let cache:null|string = '3600'
-let oneID:null | string = null
+let cache: null | string = '3600'
+let oneID: null | string = null
 
 
-if('port' in params){
+if ('port' in params) {
     const temp = params.port
     const num = +temp
-    if(Number.isSafeInteger(num) && num > 0) port = num
-    else{
+    if (Number.isSafeInteger(num) && num > 0) port = num
+    else {
         console.warn(`Invalid Port. Got ${temp}`)
     }
 }
 if ('cache' in params) {
     const temp = params.cache.toLowerCase()
-    if(temp === 'false') cache == null
-    else if(temp === 'true'){}
-    else{
+    if (temp === 'false') cache == null
+    else if (temp === 'true') { }
+    else {
         const num = +temp
-        if(Number.isSafeInteger(num) && num > 0) cache = temp
-        else{
+        if (Number.isSafeInteger(num) && num > 0) cache = temp
+        else {
             console.warn(`Invalid Cache Time. Got ${cache}`)
         }
     }
@@ -35,20 +35,23 @@ if ('cache' in params) {
 
 if ('one-id' in params) {
     const temp = params['one-id']
-
-    try {
-        oneID = encodeURIComponent(temp)
-        if (oneID.length > 6) {
-            oneID = 'aaaa'
-            console.warn('The ID is too long. Setting id to "aaaa"')
-        }
-        if (oneID.includes('%')) {
-            oneID = 'aaaa'
-            console.warn('Invalid id. Setting id to "aaaa"')
-        }
-    } catch (err) {
+    if (temp === '') {
         oneID = 'aaaa'
-        console.error('That Id could hurt someone')
+    } else {
+        try {
+            oneID = encodeURIComponent(temp)
+            if (oneID.length > 6) {
+                oneID = 'aaaa'
+                console.warn('The ID is too long. Setting id to "aaaa"')
+            }
+            if (oneID.includes('%')) {
+                oneID = 'aaaa'
+                console.warn('Invalid id. Setting id to "aaaa"')
+            }
+        } catch (err) {
+            oneID = 'aaaa'
+            console.error('That Id could hurt someone')
+        }
     }
 }
 
@@ -87,7 +90,7 @@ const sockets: IKeyVal<Socket[]> = {}
 
 web.listen(port, () => {
     const address = `http://localhost:${port}`
-    console.log(`listening at ${address} with cache set to ${cache}`)
+    console.log(`listening at ${address} with cache set to ${cache}${oneID == null ? '' : ` and one-id set to "${oneID}"`}`)
 
     if (params.open != null) {
         const openVal = params.open
@@ -99,7 +102,7 @@ web.listen(port, () => {
             profile: params['obs-profile'],
             scene: params['obs-scene'],
             min: params['obs-minimize'] != null
-        }).catch(err => console.error('Unable to launch OBS\nPlease pass in the path to the OBS executable or install OBS\nhttps://obsproject.com/download'))
+        }).catch(err => console.error(err,'Unable to launch OBS\nPlease pass in the path to the OBS executable or install OBS\nhttps://obsproject.com/download\n'))
     }
 })
 
@@ -284,16 +287,18 @@ async function open(address: string, opt?: import('open').Options) {
     console.log(`Opened '${address}'`)
 }
 
-const obsPath: { [key: string]: string } = {
-    win32: 'C:/Program Files/obs-studio/bin/64bit/obs64.exe',
-    linux: 'obs', //TODO Change to correct location
-    darwin: '/Applications/OBS.app/Contents/MacOS/OBS'
+const obsPath: { [key: string]: { path: string, cwd?: string } } = {
+    win32: {path:'obs64.exe',cwd:'C:/Program Files/obs-studio/bin/64bit'},
+    linux: {path:'obs'}, //TODO Change to correct location
+    darwin: {path: '/Applications/OBS.app/Contents/MacOS/OBS'}
 }
 
-async function openOBS({ path, profile, scene, min }: { path?: string, profile?: string, scene?: string, min?: boolean } = {}) {
+async function openOBS({ path, profile, scene, min, cwd }: { path?: string, profile?: string, scene?: string, min?: boolean, cwd?:string } = {}) {
+    const os = platform()
     if (path == null || path == '') {
-        const os = platform()
-        path = obsPath[os]
+        const temp = obsPath[os]
+        path = temp.path
+        cwd = temp.cwd
         if (path == null) throw new Error(`The platform ${os} does not have a default path`)
     }
 
@@ -311,13 +316,13 @@ async function openOBS({ path, profile, scene, min }: { path?: string, profile?:
         command += ` --minimize-to-tray`
     }
 
-    return await cmd(command)
+    return await cmd(command, cwd)
 }
 
-function cmd(command: string) {
+function cmd(command: string, cwd?: string) {
     return new Promise<string>((res, rej) => {
         import('child_process').then(cp => {
-            cp.exec(command, { windowsHide: true }, (err, data) => {
+            cp.exec(command, { windowsHide: true, cwd }, (err, data) => {
                 if (err != null) {
                     rej(err)
                 } else res(data)
