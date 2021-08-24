@@ -1,6 +1,6 @@
 FROM node:12
 
-MAINTAINER Thunderbird2086 <37539914+Thunderbird2086@users.noreply.github.com>
+MAINTAINER Rakusan2 <10575235+rakusan2@users.noreply.github.com>
 
 COPY . /opt/Toastmasters-Timer-Overlay/
 
