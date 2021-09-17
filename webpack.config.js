@@ -9,8 +9,8 @@ const commonConfig = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
-                exclude: /index.*$/
+                loader: 'ts-loader',
+                options: { projectReferences: true }
             }
         ]
     },
@@ -36,7 +36,7 @@ const devConfig = {
 };
 
 module.exports = env => {
-    if(env.development) return merge(commonConfig, devConfig);
+    if (env.development) return merge(commonConfig, devConfig);
     else if (env.production) return merge(commonConfig, prodConfig);
     else throw new Error("No Config Found");
 }

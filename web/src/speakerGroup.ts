@@ -21,6 +21,8 @@ export class SpeakerGroup {
             }
             speakerObj.name = val.name
             speakerObj.preset = val.preset
+            speakerObj.timeStart = val.timeStart
+            speakerObj.timeStop = val.timeStop
             if (onChange != null) onChange(val)
         }
         this.onFocus = id => {
@@ -109,6 +111,12 @@ export class SpeakerGroup {
         speakerObj.preset = preset
         speakerObj.timeStart = timeStart
         speakerObj.timeStop = timeStop
+    }
+
+    updateInFocus(val: Partial<ISpeakerInput>) {
+        if (this.inFocus != null) {
+            this.updateOne({ ...val, id: this.inFocus.id })
+        }
     }
 
     updateAll(speakers: any) {
@@ -279,6 +287,16 @@ export class SpeakerGroup {
         } else {
             this.unFocus()
         }
+    }
+
+    focusNext(){
+        const inFocus = this.inFocus
+        if(inFocus == null) this.focus(this.speakerObjects[0].id)
+        else{
+            const index = this.speakerObjects.findIndex(a=> a.id === inFocus.id)
+            this.focusAt(index + 1)
+        }
+        return this.inFocus
     }
 
     unFocus() {

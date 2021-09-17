@@ -3,6 +3,7 @@ import { Settings } from './settings';
 import { getElementByID, getInnerElement } from './util';
 import { SpeakerGroup } from './speakerGroup';
 import params from './params'
+import { isPressed } from './keyboard'
 
 const isView = 'view' in params
 
@@ -33,7 +34,10 @@ class UserDropdown extends HidableControl {
         }
 
         this.buttons.remove.onclick = () => {
-            if (this.speakers.inFocus != null) {
+            if (isPressed('shift')) {
+                this.speakers.removeAll()
+            }
+            else if (this.speakers.inFocus != null) {
                 this.speakers.removeInFocus()
             } else {
                 this.speakers.removeLast()
@@ -66,9 +70,9 @@ class UserDropdown extends HidableControl {
     })
     onSpeakerHide = this.settings.on('speakersHide', val => {
         this.usersHidden = val ?? isView
-        if(isView){
+        if (isView) {
             this.controlDiv.classList.toggle('hideDrop', this.usersHidden)
-        }else{
+        } else {
             this.imgHideArrow.classList.toggle('right', this.usersHidden)
             this.imgHideArrow.classList.toggle('left', !this.usersHidden)
         }

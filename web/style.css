@@ -90,17 +90,30 @@ div{
 }
 
 #dropdown {
-    width: 400px;
+    width: 500px;
     position: fixed;
     right: 0px;
     top: 0;
-    font-size: 24px;
+    font-size: 42px;
     z-index: 200;
     transition: all 0.2s linear;
 }
 
+#dropdown.small{
+    width: 400px;
+    font-size: 24px;
+}
+
 #dropdown.hideDrop{
+    right: -504px;
+}
+
+#dropdown.hideDrop.small{
     right: -404px;
+}
+
+#dropdown-control{
+    font-size: 24px;
 }
 
 .speaker-time {
@@ -122,7 +135,7 @@ div{
 
 .speaker-preset {
     text-align: left;
-    margin-top: 5px
+    margin-top: 5px;
 }
 
 .speaker-name {
@@ -145,6 +158,7 @@ div{
 .speaker-time {
     text-align: right;
     padding-right: 1em;
+    font-size: 42px;
 }
 
 img.up {

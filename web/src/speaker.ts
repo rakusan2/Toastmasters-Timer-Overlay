@@ -16,6 +16,7 @@ export class Speaker {
     nameValue: string
     presetNode: Text | TimingSelector
     presetValue: string
+    save
     constructor({ name = '', timeStart = 0, timeStop = 0, preset = 0, id }: ISpeakerInput, onUpdate: (val: ISpeakerInput) => any) {
         this.id = id
         this.timeStart = timeStart
@@ -32,6 +33,8 @@ export class Speaker {
         const doUpdate = () => {
             onUpdate({ id, name: this.nameValue, timeStart: this.timeStart, timeStop: this.timeStop, preset: this.presetValue })
         }
+
+        this.save = doUpdate
 
         if (isView) {
             nameInput = document.createTextNode(name)
@@ -74,6 +77,12 @@ export class Speaker {
 
     getTime() {
         return this.timeNode.data
+    }
+
+    setStartStop(start:number, stop: number){
+        this.timeStart = start
+        this.timeStop = stop
+        this.timeNode.data = hiddenTimeStr(stop, start)
     }
 
     setTime(val: string | number | undefined) {

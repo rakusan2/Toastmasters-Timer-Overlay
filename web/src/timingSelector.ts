@@ -116,9 +116,8 @@ export class TimingSelector {
 }
 export function getNewSelector() {
     const select = createElement('select')
-    let options = Object.keys(timePresets).map(key => {
-        const val = timePresets[key]
-        const opt = createElement('option', { value: key, innerText: val.fullName })
+    let options = timePresets.map(({ name, fullName }) => {
+        const opt = createElement('option', { value: name, innerText: fullName })
         return opt
     })
     select.append(...options)

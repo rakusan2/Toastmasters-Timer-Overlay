@@ -1,6 +1,5 @@
 import { HidableControl } from './control';
 import { getElementByID, getInnerText, clipboardCopy } from './util';
-import { HOST } from './constants';
 
 class URIBox extends HidableControl {
     idDiv = getElementByID('urlId', 'input')
@@ -10,10 +9,10 @@ class URIBox extends HidableControl {
         super(val)
 
         const urlText = getInnerText(this.controlDiv)
-        urlText.data = `http://${location.host}?view&id=`
+        urlText.data = `${location.protocol}//${location.host}?view&id=`
 
         this.copyButton.onclick = () => {
-            clipboardCopy(`http://${HOST}?view&id=${this.idDiv.value}`).catch(err => {
+            clipboardCopy(`${location.protocol}//${location.host}?view&id=${this.idDiv.value}`).catch(err => {
                 console.error({ failedCopy: err })
             })
         }
