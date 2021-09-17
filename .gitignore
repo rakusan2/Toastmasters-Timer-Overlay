@@ -2,4 +2,8 @@ node_modules/
 pkg/
 *.js
 *.js.map
+*.ts.map
+*.tsbuildinfo
+js/
+common/*.d.ts
 !webpack.*.js

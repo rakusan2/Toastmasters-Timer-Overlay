@@ -9,7 +9,7 @@ OBS will hide the background
 
 -----
 
-### Usage:
+## Usage:
 1. Download 
     - [release version](https://github.com/rakusan2/Toastmasters-Timer-Overlay/releases/)
     - [OBS Studio](https://obsproject.com/)
@@ -34,7 +34,7 @@ OBS will hide the background
 
 ------
 
-### To run from source:
+## To run from source:
 1. Download
     - [NodeJS](https://nodejs.org/en/)
 2. Run
@@ -45,7 +45,7 @@ OBS will hide the background
 
 -----
 
-### To Develop:
+## To Develop:
 1. Requirement
     - [NodeJS](https://nodejs.org/en/)
 2. Install dependencies
@@ -59,18 +59,92 @@ OBS will hide the background
 
 -----
 
-### Arguments
-- **Port** [number] The port to listen on
-- **Cache** [number or false] How long the client should cache the page for
-- **One-Id** [string, boolean on nothing] Forces all ids to be the passed string or the string `aaaa` if true or nothing is passed
-- **Open** [string or Nothing] Opens a browser window with optional parameter being the browser to open with
-- **OBS** [string or Nothing] Opens OBS with Virtual Camera enabled
-- **OBS-Profile** [string] Sets OBS Profile
-- **OBS-Scene** [string] Sets OBS Scene
-- **OBS-Minimize** [Nothing] Sets OBS minimize on start to true
+## Arguments
+| Name | Alias | Type | Description |
+| ---- | ----- | ---- | ----------- |
+| **Port** | p | Number | The port to listen on|
+| **Cache** |  | Number | How long the client should cache the page for
+| **Cache** |  | False | Disable client-side Cache
+| **One-Id** | i | String | Sets all ID's to be the assigned value
+| **One-Id** | i | True or Switch | Sets all ID's to be the assigned the value `aaaa`
+| **Open** | o | Switch | Opens a browser window |
+| **Open** | o | String | Opens the specified browser window |
+| **OBS** | b | Switch | Opens OBS with Virtual Camera enabled |
+| **OBS** | b | String | Opens OBS at assigned path with Virtual Camera enabled |
+| **OBS-CWD** |  | String | Location from where to launch OBS |
+| **OBS-Profile** |  | String | Sets OBS Profile |
+| **OBS-Scene** |  | String | Sets OBS Scene
+| **OBS-Minimize** |  | Switch | Sets OBS minimize on start to true
+| **Cert** |  | String | File path to SSL Certificate or directory with both SSL |ertificate and Key
+| **Key** |  | String | File path to SSL Key
+| **UDP** | u | Switch | Starts UDP socket on port 8889
+| **UDP** | u | Number | Starts UDP socket on assigned port
+| **UDP-Interface** | | String | Sets which Interface will be used by UDP. (Can be Network Adapter Name or an IP address used by a Network Adapter)
+| **Broadcast** |  | Switch | Sets UDP Socket to broadcast timing info to port 8890
+| **Broadcast** |  | Number | Sets UDP Socket to broadcast timing info to assigned port
+| **Broadcast-User** | b-user | String | Sets UDP Socket broadcast filter (Can be assigned more than once)
+| **TCP** | t | Switch | Sets up TCP Server on port 8891
+| **TCP** | t | Number | Sets up TCP Server on assigned port
+| **TCP-Interface** | | String | Sets which Interface will be used by TCP. (Can be Network Adapter Name or an IP address used by a Network Adapter)
 
-The arguments `port=80 cache=false one-id=true`
+The arguments `port=80 cache=false one-id=true` are the same as any of the following:
+- `--port 80 --cache false --one-id true`
+- `-p 80 --cache false -i`
+- `80 false one-id` 
+- `80 false true`
 
-Are the same as `80 false one-id` and `80 false true`
+All Arguments are case insensitive
 
-And would cause the port to be set to 80, caching to be disabled, and all ids to be `aaaa`
+**Warning:** Any argument starting with a `-` will disable all switches and assignments without them
+
+Example: `-p 80 one-id=abcd` will set 80 to **Port** and `one-id=abcd` to **Cache** 
+
+----
+
+## Socket
+A UDP Socket transmitting timing info
+
+### Packet Definition
+| Name | Size | Description |
+| ---- | ---- | ----------- |
+| Magic Value (0xAEE8A872) | 4 bytes | There to verify that the packet is coming from the timer. (Only UDP)
+| User Count | 1 byte | Number of Users in the packet
+| **User Definition**
+| ID length | 1 byte | byte length of the ID
+| ID | N bytes | UTF-8 Encoded String
+| Elapsed ms | 4 bytes | Milliseconds since the timer started
+| Green s | 2 bytes | Seconds from start till green is shown 
+| Yellow s | 2 bytes | Seconds from start till yellow is shown 
+| Red s | 2 bytes | Seconds from start till red is shown 
+| Overtime s | 2 bytes | Seconds from start till overtime is shown 
+
+### Request Packet Definition
+| Name | Size | Description |
+| ---- | ---- | ----------- |
+| Magic Number (0x7DAE0492) | 4 bytes | (Only UDP) |
+| Port | 2 bytes | Port to send data to. (Only UDP) |
+| Type | 1 byte | Message Type |
+| Data | N bytes | Look for definition below |
+
+#### Stop (Type 0)
+Stops sending packets
+
+#### User Info (Type 1)
+| Name | Size | Description |
+| ---- | ---- | ----------- |
+| User Count | 1 byte | Number of users in packet |
+| **User Definition**
+| ID length | 1 byte | Byte length of User ID |
+| ID | N bytes | UTF-8 Encoded String |
+
+Integers are Big-Endian encoded UInt
+
+----
+
+## Hint
+
+The easiest way to run the program is to add the parameters `one-id open obs`\
+This will:
+1. Set all ids to be `aaaa`
+1. Open a browser window with the controls
+1. Open OBS with Virtual Camera enabled
