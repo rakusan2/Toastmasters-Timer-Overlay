@@ -8,15 +8,18 @@ const obsPath: { [key: string]: { path: string, cwd: string } | string } = {
 
 export async function openOBS({ path, profile, scene, min, cwd }: { path?: string | boolean, profile?: string, scene?: string, min?: boolean, cwd?: string } = {}) {
     const os = platform()
-    if (path == null || path == '' || path === true) {
-        const temp = obsPath[os]
-        if (typeof temp === 'string') path = temp
-        else {
-            path = temp.path
-            cwd = temp.cwd
-        }
-        if (path == null) throw new Error(`The platform ${os} does not have a default path`)
+    if (path === false) return
+    if (path === true || path === '') path = undefined
+    
+    const temp = obsPath[os]
+    
+    if (typeof temp === 'string') path = path ?? temp
+    else {
+        path = path ?? temp.path
+        cwd = cwd ?? temp.cwd
     }
+
+    if (path == null) throw new Error(`The platform ${os} does not have a default path`)
 
     let command = path + ' --startvirtualcam'
 
