@@ -81,11 +81,11 @@ io.on('connection', socket => {
             fn({ ok: false, err: 'ID not Set' })
             return
         }
-        console.log({ id: user.id, set: settings })
+        console.log(`ID ${user.id} Set:`, settings)
         lastTimestamp = Date.now()
         let { keysNotSet, keysSet } = user.set(settings)
         fn({ ok: true, keysNotSet })
-        console.log({ keysNotSet })
+        if(keysNotSet.length > 0) console.warn({ keysNotSet })
         if (Object.keys(keysSet).length > 0) {
             sockets[user.id].forEach(soc => {
                 if (socket !== soc) {
@@ -98,13 +98,13 @@ io.on('connection', socket => {
             fn({ ok: false, err: 'ID not Set' })
             return
         }
-        console.log({ id: user.id, get: keys })
+        console.log(`ID ${user.id} Get:`, keys)
         lastTimestamp = Date.now()
         if (keys == null || typeof keys === 'string') {
             fn({ ok: true, settings: user.getObj(keys) })
-        } else if(isStringArray(keys)){
-            if(keys.length > 100) fn({ok: false, err: 'GET is limited to 100 keys'})
-        }else {
+        } else if (isStringArray(keys)) {
+            if (keys.length > 100) fn({ ok: false, err: 'GET is limited to 100 keys' })
+        } else {
             fn({ ok: false, err: 'Invalid Keys' })
         }
     })
