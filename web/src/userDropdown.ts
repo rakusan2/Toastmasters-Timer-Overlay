@@ -27,6 +27,7 @@ class UserDropdown extends HidableControl {
 
     constructor(div: string | HTMLElement) {
         super(div)
+        this.controlDiv.classList.toggle('small', !isView)
 
         this.buttons.add.onclick = () => {
             this.speakers.addNew()
