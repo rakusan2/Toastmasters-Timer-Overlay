@@ -275,7 +275,10 @@ function assignNextValue(obj: IKeyVal<any>, configs: ParamConfig[], value?: stri
         const conf = configs[i];
         const { group, catchAll } = conf
         const name = conf.parameterName ?? conf.name
-        if (catchAll === true) assignValue(obj, conf, value)
+        if (catchAll === true) {
+            assignValue(obj, conf, value)
+            return
+        }
         let tempObj = obj
         if (group != null) {
             let temp: string | undefined
@@ -285,7 +288,7 @@ function assignNextValue(obj: IKeyVal<any>, configs: ParamConfig[], value?: stri
             if (temp != null) {
                 if (obj[temp] == null) {
                     assignValue(obj, conf, value)
-                    continue
+                    return
                 }
                 else tempObj = obj[temp]
             }
