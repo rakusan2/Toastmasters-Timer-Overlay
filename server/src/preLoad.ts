@@ -2,13 +2,13 @@ import { getParams } from './params';
 import { readFileSync, lstatSync } from 'fs';
 import { networkInterfaces } from 'os'
 
-// const params = getParams(['port', 'cache', 'one-id', 'open', 'obs', 'obs-cwd', 'obs-profile', 'obs-scene', 'cert', 'key', 'socket', 'socket-broadcast', 'socket-user'], ['one-id', 'open', 'obs', 'obs-minimize', 'socket', 'socket-broadcast'])
-const params = getParams([
+export default getParams([
     {
         name: 'port',
         shortName: 'p',
         type: 'number',
-        validateRaw: /^\d{2,6}$/
+        validateRaw: /^\d{2,6}$/,
+        default: 8888
     },
     {
         name: 'cache',
@@ -17,15 +17,15 @@ const params = getParams([
         validate: (val: number | null) => {
             if (val == null) return true
             if (val <= 10) return 'Cache Age is too short'
-        }
+        },
+        default: 3600
     },
     {
         name: 'one-id',
         shortName: 'i',
-        type: 'string',
+        type: encodeURIComponent,
         switchValue: 'aaaa',
-        parameterName: 'oneID',
-        replace: encodeURIComponent,
+        propertyName: 'oneID',
         validate: validateID
     },
     {
@@ -35,57 +35,75 @@ const params = getParams([
         switchValue: true
     },
     {
-        name: 'obs',
-        shortName: 'b',
-        type: 'string',
-        group: 'obs',
-        parameterName: 'path',
-        switchValue: true
+        groupName: 'obs',
+        parameters: [
+            {
+                name: 'path',
+                alias: 'obs',
+                shortName: 'b',
+                type: 'string',
+                switchValue: true,
+                default: true
+            },
+            {
+                name: 'cwd',
+                type: 'string'
+            },
+            {
+                name: 'profile',
+                type: 'string'
+            },
+            {
+                name: 'scene',
+                type: 'string'
+            },
+            {
+                name: 'minimize',
+                alias: 'obs-min',
+                switchValue: true
+            }
+        ]
     },
     {
-        name: 'obs-cwd',
-        type: 'string',
-        group: 'obs',
-        parameterName: 'cwd'
+        name: 'ssl',
+        type: getCertKey,
+        validate: val => val != null
     },
     {
-        name: 'obs-profile',
-        type: 'string',
-        group: 'obs',
-        parameterName: 'profile'
+        groupName: 'ssl',
+        propertyName: 'sslConfig',
+        parameters: [
+            {
+                name: 'cert',
+                type: tryReadFile,
+                validate: val => val != null
+            },
+            {
+                name: 'key',
+                type: tryReadFile,
+                validate: val => val != null
+            }
+        ],
+        finalize: finalizeSslConfig
     },
     {
-        name: 'obs-scene',
-        type: 'string',
-        group: 'obs',
-        parameterName: 'scene'
-    },
-    {
-        name: 'obs-minimize',
-        switchValue: true,
-        group: 'obs',
-        parameterName: 'min'
-    },
-    {
-        name: 'cert',
-        type: 'string',
-        group: 'sslConfig',
-        validateRaw: val => val.length > 2
-    },
-    {
-        name: 'key',
-        type: 'string',
-        group: 'sslConfig',
-        validateRaw: val => val.length > 2
-    },
-    {
-        name: 'udp',
-        shortName: 'u',
-        type: 'number',
-        validateRaw: /^\d{2,6}$/,
-        switchValue: 8889,
-        group: 'udp',
-        parameterName: 'port'
+        groupName: 'udp',
+        parameters: [
+            {
+                name: 'port',
+                alias: 'udp',
+                shortName: 'u',
+                type: 'number',
+                validateRaw: /^\d{2,6}$/,
+                switchValue: 8889
+            },
+            {
+                name: 'interface',
+                alias: 'udp-if',
+                type: replaceInterface,
+                validate: validateInterface,
+            },
+        ]
     },
     {
         name: 'broadcast',
@@ -93,59 +111,51 @@ const params = getParams([
         validateRaw: /^\d{2,6}$/,
         switchValue: 8890,
         group: 'udp',
-        parameterName: 'broadcast'
+        propertyName: 'broadcast'
     },
     {
         name: 'broadcast-user',
         alias: 'b-user',
-        type: 'string',
+        type: encodeURIComponent,
         group: 'udp',
-        parameterName: 'user',
-        replace: encodeURIComponent,
+        propertyName: 'user',
         validate: validateID,
         multiple: true
     },
     {
-        name: 'udp-interface',
-        alias: 'udp-if',
-        type: 'string',
-        group: 'udp',
-        parameterName: 'interface',
-        replace: replaceInterface,
-        validate: validateInterface,
-    },
-    {
-        name: 'tcp',
-        shortName: 't',
-        type: 'number',
-        validateRaw: /^\d{2,6}$/,
-        switchValue: 8891,
-        group: 'tcp',
-        parameterName: 'port'
-    },
-    {
-        name: 'tcp-interface',
-        type: 'string',
-        group: 'tcp',
-        parameterName: 'interface',
-        replace: replaceInterface,
-        validate: validateInterface
+        groupName: 'tcp',
+        parameters: [
+            {
+                name: 'port',
+                alias: 'tcp',
+                shortName: 't',
+                type: 'number',
+                validateRaw: /^\d{2,6}$/,
+                switchValue: 8891,
+                default: 8891
+            },
+            {
+                name: 'interface',
+                type: replaceInterface,
+                validate: validateInterface
+            }
+        ]
     }
 ]) as {
-    port?: number
-    cache?: number | null
+    port: number
+    cache: number | null
     oneID?: string
-    open?: string
+    open?: string | true
     obs?: {
-        path?: string | true
+        path: string | true
         cwd?: string
         scene?: string
         profile?: string
         min?: true
     }
     sslConfig?: {
-        cert?: string
-        key?: string
+        cert: string
+        key: string
     }
     udp?: {
         port?: number
@@ -154,7 +164,7 @@ const params = getParams([
         interface?: string
     }
     tcp?: {
-        port?: number,
+        port: number,
         interface?: string
     }
 }
@@ -189,22 +199,12 @@ function validateID(val: string) {
     if (val.includes('%')) return 'ID has invalid characters'
 }
 
-let ssl: { cert: Buffer, key: Buffer } | undefined
-if (params.sslConfig != null) {
-    const { cert, key } = params.sslConfig
-    const certDir = cert ?? key
+function finalizeSslConfig(val: { cert?: Buffer, key?: Buffer }) {
+    if (val.cert == null) throw new Error('Invalid SSL Certificate')
+    if (val.key == null) throw new Error('Invalid SSL key')
 
-    if (cert != null && key != null) {
-        const certFS = tryReadFile(cert),
-            keyFS = tryReadFile(key)
-        if (certFS != null && keyFS != null) {
-            ssl = { cert: certFS, key: keyFS }
-        }
-    } else if (certDir != null) {
-        ssl = getCertKey(certDir)
-    }
+    return val
 }
-
 
 function getCertKey(dir: string) {
     if (!isDir(dir)) return
@@ -235,12 +235,3 @@ function isDir(path: string) {
     console.warn(`Not a Directory: ${path}`)
     return false
 }
-
-const defaultValues = {
-    port: 8888,
-    cache: 3600
-}
-
-const par = { ...defaultValues, ...params, sslConfig: ssl }
-
-export default par
