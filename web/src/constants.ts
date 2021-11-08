@@ -14,5 +14,6 @@ export const defaultSettings: Required<ISettingInputKnown> = {
     speakers: [],
     colorOverride: '',
     speakerIndex: -1,
-    speakersHide: true
+    speakersHide: true,
+    fillScreen: false
 }

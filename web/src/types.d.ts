@@ -18,6 +18,7 @@ export interface IResponseInit extends ISettings {
     id: string
     idLock: boolean
     serverTime: number
+    version: string
 }
 export interface IResponseSet {
     keysNotSet: string[]
@@ -46,6 +47,7 @@ export interface ISettingInputKnown {
     speakers?: ISpeakerInput[]
     speakerIndex?: number
     speakersHide?: boolean
+    fillScreen?: boolean
 }
 
 export type ISettingKeys = keyof ISettingInputKnown
@@ -80,6 +82,7 @@ export interface ISocketResponse {
     init: IResponse<IResponseInit>
     set: IResponse<IResponseSet>
     get: IResponse<ISettings>
+    checkVersion: IResponse<{ status: string, version: string }>
 }
 
 export interface ISocketListener {

@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timer Overlay</title>
     <link rel="stylesheet" href="style.css">
     <meta charset="utf8">
@@ -17,6 +18,10 @@
         <button id="copyLink">Copy Link</button>
     </div>
     <div id="controls" class="control" draggable="false">
+        <div id="quickControl">
+            <button id="borderFill">Fill Screen</button>
+            <button id="showTimer" disabled>Show Timer</button>
+        </div>
         <div id="controlHead">
             <input type="text" name="speakerName" id="SpeakerName" placeholder="Speakers Name" autocorrect="off", spellcheck="false">
         </div>
@@ -33,16 +38,36 @@
             <button id="timerNext">Next</button>
         </div>
     </div>
-    <!-- <div id="menu" class="control"></div> -->
+    <div id="menu-container">
+        <div id="menu" class="control">
+            <table>
+                <tr>
+                    <td>Check Version</td>
+                    <td id="outdated">
+                        <div id="outdateText">V 0.0.0</div>
+                        <button id="refreshOutdated">Refresh</button>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>TODO</td>
+                </tr>
+            </table>
+        </div>
+        <div id="menu-arrow" class="control button">
+            <img src="/DownArrow.svg" class="right" alt="Expand" height="20" width="20" />
+        </div>
+    </div>
     <div id="dropdown" class="control">
         <div id="dropdown-control">
-            <div id="dropdown-arrow">
+            <div id="dropdown-arrow" class="button">
                 <img src="/DownArrow.svg" class="right" alt="Expand" height="20" width="20" />
             </div>
-            <div id="dropdown-add">
+            <div id="dropdown-add" class="button">
                 <img src="/Add.svg" alt="Add User" height="20" width="20" />
             </div>
-            <div id="dropdown-remove">
+            <div id="dropdown-remove" class="button">
                 <img src="/Add.svg" class="rotate45" alt="Add User" height="20" width="20" />
             </div>
         </div>

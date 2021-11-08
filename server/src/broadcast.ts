@@ -14,7 +14,6 @@ let send: null | ((msg: Buffer, port: number, dest?: string) => void) = null
 
 if (udp != null) {
     const { port, broadcast, user = [], interface: if_addr = getInterfaceAddress() } = udp
-    const int = networkInterfaces()
     console.log(`Starting UDP Socket on port ${port} of ${if_addr}`)
     if (broadcast) console.log('Socket broadcasting to ' + broadcast)
     const soc = createSocket('udp4')
@@ -71,7 +70,7 @@ if (udp != null) {
 }
 
 if (tcp != null) {
-    const { port = 8891, interface: if_addr = getInterfaceAddress() } = tcp
+    const { port, interface: if_addr = getInterfaceAddress() } = tcp
     console.log(`Starting TCP Socket on port ${port} of ${if_addr}`)
     let clients: { client: Socket, users?: string[] }[] = []
     let timer: NodeJS.Timeout | null = null

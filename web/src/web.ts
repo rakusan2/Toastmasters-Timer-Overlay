@@ -4,6 +4,7 @@ import uriBox from './uriBox'
 import controlBox from './controlBox'
 import params from './params'
 import userDropdown from './userDropdown';
+import menu from './menu'
 
 const isView = typeof params.view != 'undefined'
 let id = params.id ?? null
@@ -12,6 +13,7 @@ if (isView) {
     controlBox.hide()
     uriBox.hide()
     userDropdown.hide()
+    menu.hide()
 }
 (<any>window).userDropdown = userDropdown
 console.log({ id, isView, params })
@@ -43,6 +45,7 @@ async function init() {
         uriBox.setID(res.id)
         uriBox.lock(res.idLock)
         initSettings(res.settings)
+        menu.setVersion(res.version)
     } else {
         console.error(res.err)
     }

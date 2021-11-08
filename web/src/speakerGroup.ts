@@ -284,16 +284,24 @@ export class SpeakerGroup {
     focusAt(position: number) {
         if (position >= 0 && position < this.speakerObjects.length) {
             this.focus(this.speakerObjects[position].id)
+            this.scrollTo(position)
         } else {
             this.unFocus()
         }
     }
 
-    focusNext(){
+    scrollTo(position: number) {
+        if (position < 0 || position >= this.speakerObjects.length) return
+        const id = this.speakerObjects[position].id
+        const speaker = this.speakers[id]
+        speaker.el.scrollIntoView()
+    }
+
+    focusNext() {
         const inFocus = this.inFocus
-        if(inFocus == null) this.focus(this.speakerObjects[0].id)
-        else{
-            const index = this.speakerObjects.findIndex(a=> a.id === inFocus.id)
+        if (inFocus == null) this.focus(this.speakerObjects[0].id)
+        else {
+            const index = this.speakerObjects.findIndex(a => a.id === inFocus.id)
             this.focusAt(index + 1)
         }
         return this.inFocus

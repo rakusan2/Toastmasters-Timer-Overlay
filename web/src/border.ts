@@ -7,6 +7,8 @@ class Border {
     private currentColour: ISettableColours = 'white'
     private currentSetColor: ISettableColours = 'white'
     private overrideColour: ISettableColours | '' = ''
+    private lastFill = false
+    fillScreen = false
     elements: HTMLElement[]
 
     constructor(elements: (HTMLElement | string)[]) {
@@ -23,21 +25,33 @@ class Border {
 
     refresh() {
         const val = this.overrideColour != '' ? this.overrideColour : this.currentSetColor
+        const fill = this.fillScreen
 
-        if (this.currentColour == val) {
+        if (this.currentColour == val && this.lastFill === this.fillScreen) {
             return
         }
 
         let className = 'border'
 
+
         if (val != 'white') {
             className += ` ${val}-bg`
+        } else if (fill) {
+            className += ' black-bg'
         }
+
+        if (fill) className += ' fill'
 
         this.elements.forEach(el => el.className = className)
         this.currentColour = val
-
+        this.lastFill = this.fillScreen
     }
+
+    onFillScreen = onSetting('fillScreen', (val = false) => {
+        console.log({ fill: val })
+        this.fillScreen = val
+        this.refresh()
+    }, this)
 
     changeOverride = onKey(['1', '2', '3', 'g', 'y', 'r'], () => {
         const greenKey = isPressed('1') || isPressed('g')

@@ -5,7 +5,7 @@ import { IServeHandler } from './serverTypes'
 
 const { cache, port, sslConfig } = parameters
 
-const dir = __dirname.split(/\\|\//).slice(0,-2)
+const dir = __dirname.split(/\\|\//).slice(0, -2)
 const webDir = dir.join('/') + "/web"
 console.log('Web: ' + webDir)
 
@@ -19,7 +19,7 @@ const handlerConfig: IServeHandler = {
     ]
 }
 
-if (cache) {
+if (cache != null) {
     handlerConfig.headers = [
         {
             source: '*',
@@ -49,7 +49,7 @@ export default function startServer(afterStart?: (address: string) => any) {
     }
 
     server.listen(port, () => {
-        const address = `http://localhost:${port}`
+        const address = `${sslConfig != null ? 'https' : 'http'}://localhost:${port}`
         console.log(`listening at ${address} with cache set to ${cache ?? 'DISABLED'}`)
 
         if (afterStart != null) afterStart(address)

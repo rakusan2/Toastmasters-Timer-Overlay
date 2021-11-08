@@ -2,11 +2,27 @@ import parameters from './preLoad'
 import createServer from './webServer'
 import { Socket } from 'socket.io'
 import { openOBS, open, getRandomStr64, isStringArray } from './tools'
-import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings } from './types'
+import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings, GithubReleaseResponse, VersionCheckStatus, GithubAsset } from './types'
 import { Settings } from './settings'
 import './broadcast'
+import { get } from 'https'
+import { platform } from 'os'
+import { writeFile } from 'fs/promises'
+import { readFileSync } from 'fs'
 
 const { oneID, obs, open: openLoc } = parameters
+
+console.log('parameters', parameters)
+
+let lastVersion = 'v0.0.0'
+
+try {
+    const pkgFile = readFileSync('./package.json', 'utf8')
+    const pkg = JSON.parse(pkgFile) as { version: string, name: string }
+    lastVersion = 'v' + pkg.version
+} catch { }
+
+console.log('Version:', lastVersion)
 
 const users: { [id: string]: IUser } = {}
 const sockets: IKeyVal<Socket[]> = {}
@@ -16,7 +32,7 @@ const io = createServer(address => {
 
     if (openLoc != null) {
         const openVal = openLoc
-        open(address, openVal === '' ? undefined : { app: { name: openVal } }).catch(() => console.log('Can not Open'))
+        open(address, typeof openVal !== 'string' ? undefined : { app: { name: openVal } }).catch(() => console.log('Can not Open'))
     }
     if (obs != null) {
         openOBS(obs).catch(err => console.error(err, 'Unable to launch OBS\nPlease pass in the path to the OBS executable or install OBS\nhttps://obsproject.com/download\n'))
@@ -66,7 +82,7 @@ io.on('connection', socket => {
             logUserCount()
 
             lastTimestamp = Date.now()
-            fn({ ok: true, id: userID, settings: user.data, serverTime: Date.now(), idLock: oneID != null })
+            fn({ ok: true, id: userID, settings: user.data, serverTime: Date.now(), idLock: oneID != null, version: lastVersion })
         } catch (err: any) {
             console.log({ init: { err } })
             if (typeof err == 'string') {
@@ -85,7 +101,7 @@ io.on('connection', socket => {
         lastTimestamp = Date.now()
         let { keysNotSet, keysSet } = user.set(settings)
         fn({ ok: true, keysNotSet })
-        if(keysNotSet.length > 0) console.warn({ keysNotSet })
+        if (keysNotSet.length > 0) console.warn({ keysNotSet })
         if (Object.keys(keysSet).length > 0) {
             sockets[user.id].forEach(soc => {
                 if (socket !== soc) {
@@ -108,7 +124,102 @@ io.on('connection', socket => {
             fn({ ok: false, err: 'Invalid Keys' })
         }
     })
+        .on('checkVersion', (_msg: any, fn: IResponseFn<VersionCheckStatus>) => {
+            if (!isCheckingVersion) checkVersion()
+            switch (versionStatus) {
+                case VersionStatus.checking:
+                    fn({ ok: true, version: lastVersion, status: 'Checking' })
+                    break
+                case VersionStatus.downloading:
+                    fn({ ok: true, version: lastVersion, status: 'Downloading' })
+                    break
+                case VersionStatus.err:
+                    fn({ ok: false, err: 'Version Check Error' })
+                    break
+                case VersionStatus.newest:
+                    fn({ ok: true, version: lastVersion, status: 'Newest' })
+                    break
+                case VersionStatus.noPlatform:
+                    fn({ ok: false, err: 'Unknown Platform' })
+                    break
+                case VersionStatus.noRelease:
+                    fn({ ok: true, version: lastVersion, status: 'Release Not Found' })
+                    break
+            }
+        })
 })
+
+let lastCheck = 0
+let isCheckingVersion = false
+let versionStatus = VersionStatus.newest
+
+const enum VersionStatus {
+    checking,
+    downloading,
+    newest,
+    noPlatform,
+    noRelease,
+    err
+}
+
+async function checkVersion() {
+    const timestamp = Date.now()
+    if (timestamp - lastCheck < 1000) {
+        return
+    }
+    isCheckingVersion = true
+    lastCheck = Date.now()
+    try {
+        versionStatus = VersionStatus.checking
+        const data = await getP<GithubReleaseResponse[]>('https://api.github.com/repos/rakusan2/Toastmasters-Timer-Overlay/releases?per_page=4')
+        if (typeof data === 'string') {
+            isCheckingVersion = false
+            console.warn('Unable to parse GitHub Data')
+            isCheckingVersion = false
+            versionStatus = VersionStatus.err
+            return
+        }
+        const obj = data.find(a => !a.prerelease && !a.draft)
+        if (obj == null) {
+            console.warn('Unable to find release version')
+            isCheckingVersion = false
+            versionStatus = VersionStatus.noRelease
+            return
+        }
+        if (obj.tag_name === lastVersion) {
+            isCheckingVersion = false
+            versionStatus = VersionStatus.newest
+            return
+        }
+
+        let assetID = 0
+        let asset: GithubAsset | undefined
+        const os = platform()
+        let platformStr: string = ''
+        if (os === 'win32') platformStr = 'timer-overlay-win.exe'
+        else if (os === 'linux') platformStr = 'timer-overlay-linux'
+        else if (os === 'darwin') platformStr = 'timer-overlay-macos'
+
+        asset = obj.assets.find(a => a.name === platformStr)
+
+        if (asset == null) {
+            isCheckingVersion = false
+            versionStatus = VersionStatus.noPlatform
+            return
+        }
+        versionStatus = VersionStatus.downloading
+        const assetBin = await getP<Buffer>('https://api.github.com/repos/rakusan2/Toastmasters-Timer-Overlay/releases/assets/' + assetID, true)
+        await writeFile(platformStr, assetBin)
+
+    } catch (err) {
+        console.warn(err)
+        versionStatus = VersionStatus.err
+        isCheckingVersion = false
+        return
+    }
+    isCheckingVersion = false
+    versionStatus = VersionStatus.newest
+}
 
 function initUser(id?: string | null) {
     if (typeof oneID === 'string') {
@@ -132,4 +243,36 @@ function getID() {
     } while (typeof users[id] !== 'undefined')
     users[id] = { settings: {}, lastMessageAt: Date.now() }
     return id
+}
+
+function getP<T>(uri: string, bin: true): Promise<Buffer>
+function getP<T>(uri: string, bin?: false): Promise<T | string>
+function getP(uri: string, bin = false) {
+    return new Promise<any>((res, rej) => {
+        const req = get(uri, socket => {
+            const result: Buffer[] = []
+            let len = 0
+            socket.on('data', (data: Buffer) => {
+                result.push(data)
+                len += data.length
+            }).on('close', () => {
+                const status = socket.statusCode ?? 0
+                const binary = Buffer.concat(result, len)
+                const str = binary.toString('utf8')
+                if (status >= 200 || status < 300) {
+                    if (bin) {
+                        res(binary)
+                        return
+                    }
+                    try {
+                        const parsed = JSON.parse(str)
+                        res(parsed)
+                    } catch {
+                        res(str)
+                    }
+                } else rej(str)
+            })
+        })
+        req.on('error', rej)
+    })
 }

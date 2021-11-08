@@ -10,7 +10,7 @@ body {
     background-color: rgb(255, 255, 255);
 }
 
-div{
+div {
     overflow: hidden;
 }
 
@@ -24,6 +24,10 @@ div{
 
 .green-bg {
     background-color: green;
+}
+
+.black-bg {
+    background-color: black;
 }
 
 .red-tx {
@@ -44,6 +48,11 @@ div{
     overflow: hidden;
     z-index: 100;
     transition: all 0.2s linear
+}
+
+.border.fill {
+    width: 100% !important;
+    height: 100% !important;
 }
 
 #left-border, #right-border {
@@ -87,6 +96,16 @@ div{
 .control {
     border: 2px solid #5b85f8;
     background-color: rgb(214, 214, 214);
+    z-index: 100;
+}
+
+#container {
+    height: 100%
+}
+
+#dropdown-users {
+    overflow-y: auto;
+    max-height: 90vh;
 }
 
 #dropdown {
@@ -99,20 +118,20 @@ div{
     transition: all 0.2s linear;
 }
 
-#dropdown.small{
+#dropdown.small {
     width: 400px;
     font-size: 24px;
 }
 
-#dropdown.hideDrop{
+#dropdown.hideDrop {
     right: -504px;
 }
 
-#dropdown.hideDrop.small{
+#dropdown.hideDrop.small {
     right: -404px;
 }
 
-#dropdown-control{
+#dropdown-control {
     font-size: 24px;
 }
 
@@ -165,11 +184,11 @@ img.up {
     transition: all 0.2s linear;
 }
 
-img{
+img {
     transition: all 0.2s linear;
 }
 
-#dropdown ::placeholder{
+#dropdown::placeholder {
     color: rgb(146, 146, 146);
 }
 
@@ -177,7 +196,7 @@ img.right {
     transform: rotate(-90deg);
 }
 
-img.left{
+img.left {
     transform: rotate(90deg);
 }
 
@@ -193,14 +212,15 @@ img.rotate45 {
     background-color: rgb(180, 180, 180);
 }
 
-#dropdown-users>.speaker.inFocus{
-    background-color: rgb(155,166,243);;
+#dropdown-users>.speaker.inFocus {
+    background-color: rgb(155, 166, 243);
 }
+
 #dropdown-control {
     display: flex;
 }
 
-#dropdown-control:not(.hide)~#dropdown-users>.speaker:first-child{
+#dropdown-control:not(.hide)~#dropdown-users>.speaker:first-child {
     border-top: 2px solid black;
 }
 
@@ -209,7 +229,7 @@ img.rotate45 {
     padding: 10px 10px 5px 10px;
 }
 
-#dropdown-control img{
+#dropdown-control img {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -218,7 +238,7 @@ img.rotate45 {
     user-select: none;
 }
 
-#dropdown-control>div:hover {
+.button:hover {
     background-color: rgb(180, 180, 180);
 }
 
@@ -248,9 +268,18 @@ img.rotate45 {
     border-top: 2px solid red;
 }
 
+#quickControl {
+    border-bottom: 2px solid #5b85f8;
+    padding-bottom: 5px;
+}
+
 #controls>div {
     width: 100%;
     margin: 5px 0;
+}
+
+#controlHead {
+    padding-top: 1px;
 }
 
 .timeSelection {
@@ -267,6 +296,57 @@ img.rotate45 {
 
 #controlButtons>button {
     width: 5em;
+}
+
+#menu-container:not(.showMenu) {
+    transform: translate(calc(-20em - 2px), 0);
+}
+
+#menu-container {
+    height: 100vh;
+    width: 25em;
+    position: fixed;
+    top: 0;
+    display: flex;
+    z-index: 100;
+    transition: all 0.2s linear
+}
+
+#menu {
+    width: 20em;
+    height: 100vh;
+    left: 0;
+}
+
+#menu td {
+    padding: 5px;
+}
+
+#manu tr>td:first-child {
+    border-right: 1px solid black;
+}
+
+#menu tr:not(:last-child) {
+    border-bottom: 1px solid black;
+}
+
+#menu table {
+    border-collapse: collapse;
+}
+
+#menu tr>td:first-child {
+    width: 20%;
+    font-weight: 200;
+    font-size: 1.5em;
+}
+
+#menu-arrow {
+    padding-top: 10px;
+    width: 40px;
+    height: 30px;
+    border-left: none;
+    border-radius: 0 15px 15px 0;
+    right: 0;
 }
 
 #GreenTime {

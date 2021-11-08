@@ -15,6 +15,12 @@ class ControlBox extends HidableControl {
     timerStart = 0
     timerStop = 0
 
+    fillScreen = false
+
+    quickSetting = {
+        fillScreen: getElementByID('borderFill', 'button')
+    }
+
     button = {
         start: getElementByID('timerStart', 'button'),
         reset: getElementByID('timerReset', 'button'),
@@ -34,6 +40,7 @@ class ControlBox extends HidableControl {
         start.onclick = () => this.onStartButton()
         reset.onclick = () => this.onResetButton()
         next.onclick = () => this.onNextButton()
+        this.quickSetting.fillScreen.onclick = () => this.onBorderFill()
         this.speaker.onchange = () => this.onSpeakerNameChange()
 
         this.selector.el.onchange = () => this.onSelectorChange()
@@ -106,6 +113,11 @@ class ControlBox extends HidableControl {
         }
     }
 
+    onBorderFill() {
+        this.updateFullScreenButton(!this.fillScreen, 'fillScreen')
+        setSetting('fillScreen', this.fillScreen)
+    }
+
     clearCustomIntervalCache() {
         if (this.selector.isCustom()) {
             this.selector.clearCache()
@@ -126,6 +138,16 @@ class ControlBox extends HidableControl {
     onEscKey = onKeyDown('esc', () => {
         this.onResetButton()
     })
+
+    updateFullScreenButton = onSetting('fillScreen', val => {
+        const txt = this.quickSetting.fillScreen.firstChild as Text
+        this.fillScreen = val ?? false
+        if (val) {
+            txt.nodeValue = 'Border'
+        } else {
+            txt.nodeValue = 'Fill Screen'
+        }
+    }, this)
 
     updateStartButtonText = afterSetting(['timerStart', 'timerStop', 'speakers', 'speakerIndex'], () => {
         const text = this.button.start.firstChild as Text

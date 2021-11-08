@@ -74,9 +74,10 @@ OBS will hide the background
 | **OBS-CWD** |  | String | Location from where to launch OBS |
 | **OBS-Profile** |  | String | Sets OBS Profile |
 | **OBS-Scene** |  | String | Sets OBS Scene
-| **OBS-Minimize** |  | Switch | Sets OBS minimize on start to true
-| **Cert** |  | String | File path to SSL Certificate or directory with both SSL |ertificate and Key
-| **Key** |  | String | File path to SSL Key
+| **OBS-Minimize** | obs-min | Switch | Sets OBS minimize on start to true
+| **ssl** |  | String | File path to SSL directory with both SSL certificate and Key
+| **ssl-cert** |  | String | File path to SSL Certificate
+| **ssl-key** |  | String | File path to SSL Key
 | **UDP** | u | Switch | Starts UDP socket on port 8889
 | **UDP** | u | Number | Starts UDP socket on assigned port
 | **UDP-Interface** | | String | Sets which Interface will be used by UDP. (Can be Network Adapter Name or an IP address used by a Network Adapter)

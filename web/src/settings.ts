@@ -269,6 +269,12 @@ function bachSend(settings: ISettingInputKnown) {
     })
 }
 
+export async function checkVersion(){
+    const data = await send('checkVersion')
+    if(data.ok === true) return data
+    return null
+}
+
 export function initSettings(val: ISettingInput) {
     setSettings({ ...defaultSettings, ...val }, false)
 }
