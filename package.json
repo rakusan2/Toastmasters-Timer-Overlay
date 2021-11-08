@@ -2,14 +2,15 @@
   "name": "timer-overlay",
   "version": "1.2.2",
   "description": "",
-  "main": "server/js/src/index.js",
-  "bin": "server/js/src/index.js",
+  "main": "server/js/index.js",
+  "bin": "server/js/index.js",
   "pkg": {
     "assets": [
       "web/*.html",
       "web/*.css",
       "web/*.js",
-      "web/*.svg"
+      "web/*.svg",
+      "package.json"
     ]
   },
   "scripts": {

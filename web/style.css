@@ -299,7 +299,7 @@ img.rotate45 {
 }
 
 #menu-container:not(.showMenu) {
-    transform: translate(calc(-20em - 2px), 0);
+    transform: translate(calc(-20em - 4px), 0);
 }
 
 #menu-container {
