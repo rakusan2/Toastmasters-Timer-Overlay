@@ -17,7 +17,9 @@ console.log('parameters', parameters)
 let lastVersion = 'v0.0.0'
 
 try {
-    const pkgFile = readFileSync('./package.json', 'utf8')
+    const dir = __dirname.split(/\\|\//).slice(0, -2).join('/')
+    console.log(dir)
+    const pkgFile = readFileSync(dir + '/package.json', 'utf8')
     const pkg = JSON.parse(pkgFile) as { version: string, name: string }
     lastVersion = 'v' + pkg.version
 } catch { }
