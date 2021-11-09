@@ -19,6 +19,10 @@ export interface IResponseInit extends ISettings {
     idLock: boolean
     serverTime: number
     version: string
+    newVersion?: {
+        version: string
+        link: string
+    }
 }
 export interface IResponseSet {
     keysNotSet: string[]
@@ -82,7 +86,7 @@ export interface ISocketResponse {
     init: IResponse<IResponseInit>
     set: IResponse<IResponseSet>
     get: IResponse<ISettings>
-    checkVersion: IResponse<{ status: string, version: string }>
+    checkVersion: IResponse<{ status: string, version: string, newVersion?: { version: string, link: string } }>
 }
 
 export interface ISocketListener {

@@ -5,26 +5,26 @@ import { openOBS, open, getRandomStr64, isStringArray } from './tools'
 import { IUser, IKeyVal, IResponseFn, IResponseInit, ISetting, ISettings, GithubReleaseResponse, VersionCheckStatus, GithubAsset } from './types'
 import { Settings } from './settings'
 import './broadcast'
-import { get } from 'https'
+import { get, RequestOptions } from 'https'
 import { platform } from 'os'
-import { writeFile } from 'fs/promises'
 import { readFileSync } from 'fs'
 
 const { oneID, obs, open: openLoc } = parameters
 
 console.log('parameters', parameters)
 
-let lastVersion = 'v0.0.0'
+let currentVersion = 'v0.0.0'
+let newVersion: { version: string, link: string } | undefined
 
 try {
     const dir = __dirname.split(/\\|\//).slice(0, -2).join('/')
     console.log(dir)
     const pkgFile = readFileSync(dir + '/package.json', 'utf8')
     const pkg = JSON.parse(pkgFile) as { version: string, name: string }
-    lastVersion = 'v' + pkg.version
+    currentVersion = 'v' + pkg.version
 } catch { }
 
-console.log('Version:', lastVersion)
+console.log('Version:', currentVersion)
 
 const users: { [id: string]: IUser } = {}
 const sockets: IKeyVal<Socket[]> = {}
@@ -39,6 +39,7 @@ const io = createServer(address => {
     if (obs != null) {
         openOBS(obs).catch(err => console.error(err, 'Unable to launch OBS\nPlease pass in the path to the OBS executable or install OBS\nhttps://obsproject.com/download\n'))
     }
+    checkVersion()
 })
 
 io.on('connection', socket => {
@@ -73,7 +74,7 @@ io.on('connection', socket => {
 
             user = initUser(id)
             const userID = user.id
-            console.log('Connected', { userID: user.id, user: user.data })
+            console.log('Connected', { userID: user.id, user: user.data, newVersion })
 
             if (typeof sockets[userID] === 'undefined') {
                 sockets[userID] = [socket]
@@ -84,7 +85,7 @@ io.on('connection', socket => {
             logUserCount()
 
             lastTimestamp = Date.now()
-            fn({ ok: true, id: userID, settings: user.data, serverTime: Date.now(), idLock: oneID != null, version: lastVersion })
+            fn({ ok: true, id: userID, settings: user.data, serverTime: Date.now(), idLock: oneID != null, version: currentVersion, newVersion })
         } catch (err: any) {
             console.log({ init: { err } })
             if (typeof err == 'string') {
@@ -126,26 +127,20 @@ io.on('connection', socket => {
             fn({ ok: false, err: 'Invalid Keys' })
         }
     })
-        .on('checkVersion', (_msg: any, fn: IResponseFn<VersionCheckStatus>) => {
+        .on('checkVersion', (fn: IResponseFn<VersionCheckStatus>) => {
             if (!isCheckingVersion) checkVersion()
             switch (versionStatus) {
                 case VersionStatus.checking:
-                    fn({ ok: true, version: lastVersion, status: 'Checking' })
-                    break
-                case VersionStatus.downloading:
-                    fn({ ok: true, version: lastVersion, status: 'Downloading' })
+                    fn({ ok: true, version: currentVersion, status: 'Checking', newVersion })
                     break
                 case VersionStatus.err:
                     fn({ ok: false, err: 'Version Check Error' })
                     break
                 case VersionStatus.newest:
-                    fn({ ok: true, version: lastVersion, status: 'Newest' })
-                    break
-                case VersionStatus.noPlatform:
-                    fn({ ok: false, err: 'Unknown Platform' })
+                    fn({ ok: true, version: currentVersion, status: 'Newest', newVersion })
                     break
                 case VersionStatus.noRelease:
-                    fn({ ok: true, version: lastVersion, status: 'Release Not Found' })
+                    fn({ ok: true, version: currentVersion, status: 'Release Not Found', newVersion })
                     break
             }
         })
@@ -157,23 +152,21 @@ let versionStatus = VersionStatus.newest
 
 const enum VersionStatus {
     checking,
-    downloading,
     newest,
-    noPlatform,
     noRelease,
     err
 }
 
 async function checkVersion() {
     const timestamp = Date.now()
-    if (timestamp - lastCheck < 1000) {
+    if (timestamp - lastCheck < 10_000) {
         return
     }
     isCheckingVersion = true
     lastCheck = Date.now()
     try {
         versionStatus = VersionStatus.checking
-        const data = await getP<GithubReleaseResponse[]>('https://api.github.com/repos/rakusan2/Toastmasters-Timer-Overlay/releases?per_page=4')
+        const data = await getGH<GithubReleaseResponse[]>('/repos/rakusan2/Toastmasters-Timer-Overlay/releases?per_page=4')
         if (typeof data === 'string') {
             isCheckingVersion = false
             console.warn('Unable to parse GitHub Data')
@@ -188,7 +181,7 @@ async function checkVersion() {
             versionStatus = VersionStatus.noRelease
             return
         }
-        if (obj.tag_name === lastVersion) {
+        if (obj.tag_name === currentVersion || (newVersion != null && obj.tag_name === newVersion.version)) {
             isCheckingVersion = false
             versionStatus = VersionStatus.newest
             return
@@ -202,16 +195,27 @@ async function checkVersion() {
         else if (os === 'linux') platformStr = 'timer-overlay-linux'
         else if (os === 'darwin') platformStr = 'timer-overlay-macos'
 
-        asset = obj.assets.find(a => a.name === platformStr)
+        if (platformStr !== '') asset = obj.assets.find(a => a.name === platformStr)
 
         if (asset == null) {
-            isCheckingVersion = false
-            versionStatus = VersionStatus.noPlatform
-            return
+            newVersion = {
+                version: obj.tag_name,
+                link: `https://github.com/rakusan2/Toastmasters-Timer-Overlay/releases/tag/${obj.tag_name}`
+            }
+        } else {
+            newVersion = {
+                version: obj.tag_name,
+                link: `https://github.com/rakusan2/Toastmasters-Timer-Overlay/releases/download/${obj.tag_name}/${platformStr}`
+            }
         }
-        versionStatus = VersionStatus.downloading
-        const assetBin = await getP<Buffer>('https://api.github.com/repos/rakusan2/Toastmasters-Timer-Overlay/releases/assets/' + assetID, true)
-        await writeFile(platformStr, assetBin)
+        console.log('New Version available ' + obj.tag_name)
+        console.log('New Version Link ' + newVersion.link)
+
+        Object.values(sockets).map(socArr => {
+            socArr.forEach(soc => {
+                soc.send('newVersion', newVersion)
+            })
+        })
 
     } catch (err) {
         console.warn(err)
@@ -247,11 +251,30 @@ function getID() {
     return id
 }
 
-function getP<T>(uri: string, bin: true): Promise<Buffer>
-function getP<T>(uri: string, bin?: false): Promise<T | string>
-function getP(uri: string, bin = false) {
+async function getGH<T>(path: string, bin: true): Promise<Buffer>
+async function getGH<T>(path: string, bin?: false): Promise<T | string>
+async function getGH(path: string, bin = false) {
+    const headers: RequestOptions['headers'] = {
+        'User-Agent': 'timer-overlay/' + currentVersion
+    }
+    if (bin !== true) headers['Content-Type'] = 'application/json'
+
+    const options: RequestOptions = {
+        protocol: 'https:',
+        hostname: 'api.github.com',
+        path,
+        headers
+    }
+    const data = await getP(options, bin)
+    return data
+}
+
+function getP<T>(options: RequestOptions, bin: true): Promise<Buffer>
+function getP<T>(options: RequestOptions, bin?: false): Promise<T | string>
+function getP<T>(options: RequestOptions, bin: boolean): Promise<T | string | Buffer>
+function getP(options: RequestOptions, bin = false) {
     return new Promise<any>((res, rej) => {
-        const req = get(uri, socket => {
+        const req = get(options, socket => {
             const result: Buffer[] = []
             let len = 0
             socket.on('data', (data: Buffer) => {

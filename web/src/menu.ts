@@ -1,28 +1,67 @@
-import { HidableControl } from './control';
-import { onKeyDown } from './keyboard';
-import { onSetting } from './settings'
-import { getElementByID, getFirstTextByOuterID, getInnerElement } from './util';
+import { HidableControl } from './control'
+import { checkVersion } from './settings'
+import { createElement, getElementByID, getFirstTextByOuterID, getInnerElement } from './util';
 
 class Menu extends HidableControl {
     hideArrow = getElementByID('menu-arrow', 'div')
     hideArrowImg = getInnerElement(this.hideArrow, 'img')
     isShown = false
+    oldVersion = 'v0.0.0'
 
     items = {
         outdated: {
+            el: getElementByID('outdateText', 'div'),
             txt: getFirstTextByOuterID('outdateText'),
-            refresh: getElementByID('refreshOutdated')
+            refreshButton: getElementByID('refreshOutdated', 'button'),
+            removedText: false,
+            link: null as null | HTMLAnchorElement
         }
     }
     constructor(val: string | HTMLDivElement) {
         super(val)
 
         this.hideArrow.onclick = () => this.onHideArrow()
+        this.items.outdated.refreshButton.onclick = () => this.onVersionRefresh()
 
     }
 
     setVersion(version: string) {
-        this.items.outdated.txt.nodeValue = version
+        const div = this.items.outdated
+        if (div.removedText) {
+            return
+        }
+        div.txt.nodeValue = version
+        div.refreshButton.disabled = false
+        this.oldVersion = version
+    }
+
+    setNewVersion(newVersion: { version: string, link: string }) {
+        const div = this.items.outdated
+        if (div.link == null) {
+            const link = createElement('a')
+            div.txt.remove()
+            link.appendChild(div.txt)
+            div.el.appendChild(link)
+            div.link = link
+        }
+        div.link.href = newVersion.link
+        div.txt.nodeValue = this.oldVersion + ' => ' + newVersion.version
+        div.refreshButton.disabled = false
+
+    }
+
+    onVersionRefresh() {
+        const div = this.items.outdated
+        div.refreshButton.disabled = true
+        checkVersion().then(val => {
+            if (val == null) return
+            console.log('Check Version', val)
+            if (val.ok && val.newVersion != null) this.setNewVersion(val.newVersion)
+        })
+            .catch(console.error)
+            .then(() => {
+                div.refreshButton.disabled = false
+            })
     }
 
     onHideArrow() {

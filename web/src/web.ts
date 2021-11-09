@@ -28,6 +28,10 @@ on('changedSetting', (res) => {
     }
 })
 
+on('newVersion', (newVersion: { version: string, link: string }) => {
+    menu.setNewVersion(newVersion)
+})
+
 uriBox.idDiv.addEventListener('change', function(ev) {
     id = this.value
     init()
@@ -36,6 +40,7 @@ uriBox.idDiv.addEventListener('change', function(ev) {
 async function init() {
     console.log('Initializing')
     const res = await send('init', id)
+    console.log('Init Data', res)
     if (res.ok) {
         const lastId = id
         id = res.id
@@ -46,6 +51,9 @@ async function init() {
         uriBox.lock(res.idLock)
         initSettings(res.settings)
         menu.setVersion(res.version)
+        if (res.newVersion != null) {
+            menu.setNewVersion(res.newVersion)
+        }
     } else {
         console.error(res.err)
     }

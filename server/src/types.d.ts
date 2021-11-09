@@ -17,6 +17,10 @@ export interface IResponseInit extends ISettings {
     idLock: boolean
     serverTime: number
     version: string
+    newVersion?: {
+        version: string
+        link: string
+    }
 }
 export interface ISettings {
     settings: {
@@ -60,6 +64,10 @@ export interface IParamOptions {
 export interface VersionCheckStatus {
     status: string
     version: string
+    newVersion?: {
+        version: string
+        link: string
+    }
 }
 
 interface GithubReleaseResponse {
