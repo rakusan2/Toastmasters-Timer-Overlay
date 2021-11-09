@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "node server/js/index.js",
-    "dev": "npm run watch:ts cache=false",
+    "dev": "npm run watch:server cache=false",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run build:server && npm run build:prod",
     "build:server": "tsc -p ./common/ && tsc -p ./server/",

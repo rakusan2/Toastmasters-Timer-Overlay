@@ -144,8 +144,10 @@ Integers are Big-Endian encoded UInt
 
 ## Hint
 
-The easiest way to run the program is to add the parameters `one-id open obs`\
+The easiest way to run the program is to add the parameters `one-id open obs-min`\
 This will:
 1. Set all ids to be `aaaa`
 1. Open a browser window with the controls
-1. Open OBS with Virtual Camera enabled
+1. Open OBS with Virtual Camera enabled and minimized to tray
+    - Closing the process will close OBS as well
+    - the parameter `obs` can be used instead to not minimize obs

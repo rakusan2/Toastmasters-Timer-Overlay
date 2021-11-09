@@ -148,7 +148,7 @@ function replaceStringAndGroupConfig(config: (ParamConfig | ParamGroupConfig | s
                 if (typeof prop === 'string') {
                     res.push({ name: groupName + '-' + prop, type: 'string', group: groupPropName, propertyName: prop })
                 } else {
-                    const temp: ParamConfig = { ...prop, name: groupName + '-' + prop.name, group: groupPropName, propertyName: prop.name }
+                    const temp: ParamConfig = { ...prop, name: groupName + '-' + prop.name, group: groupPropName, propertyName: prop.propertyName ?? prop.name }
                     res.push(assertAndFixConfig(temp, options))
                 }
             }

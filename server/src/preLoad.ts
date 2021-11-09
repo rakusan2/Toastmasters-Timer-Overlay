@@ -60,7 +60,8 @@ export default getParams([
             {
                 name: 'minimize',
                 alias: 'obs-min',
-                switchValue: true
+                switchValue: true,
+                propertyName: 'min'
             }
         ]
     },
