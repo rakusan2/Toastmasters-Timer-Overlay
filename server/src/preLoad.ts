@@ -6,12 +6,14 @@ export default getParams([
     {
         name: 'port',
         shortName: 'p',
+        description: 'Website Port',
         type: 'number',
         validateRaw: /^\d{2,6}$/,
         default: 8888
     },
     {
         name: 'cache',
+        description: 'Set Client side cache duration\nCan be disabled with `false`',
         type: ['number', 'boolean'],
         replace: (val: boolean | number) => (typeof val !== 'boolean') ? val : val ? 3600 : null,
         validate: (val: number | null) => {
@@ -23,6 +25,7 @@ export default getParams([
     {
         name: 'one-id',
         shortName: 'i',
+        description: 'Only allow a single id\nSetting a string will set a specific id',
         type: encodeURIComponent,
         switchValue: 'aaaa',
         propertyName: 'oneID',
@@ -31,22 +34,26 @@ export default getParams([
     {
         name: 'open',
         shortName: 'o',
+        description: 'Open a browser page',
         type: 'string',
         switchValue: true
     },
     {
         groupName: 'obs',
+        description: 'OBS Studio settings\nSettings any of these will open OBS Studio',
         parameters: [
             {
                 name: 'path',
                 alias: 'obs',
                 shortName: 'b',
+                description: 'Path to OBS Executable',
                 type: 'string',
                 switchValue: true,
                 default: true
             },
             {
                 name: 'cwd',
+                description: 'Path from where to start OBS Studio',
                 type: 'string'
             },
             {
@@ -60,6 +67,7 @@ export default getParams([
             {
                 name: 'minimize',
                 alias: 'obs-min',
+                description: 'Start OBS Studio Minimized to Tray',
                 switchValue: true,
                 propertyName: 'min'
             }
@@ -67,11 +75,13 @@ export default getParams([
     },
     {
         name: 'ssl',
+        description: 'Set path to folder with HTTPS Certificate and Key',
         type: getCertKey,
         validate: isNotNull
     },
     {
         groupName: 'ssl',
+        description:'Set HTTPS Certificate and Key individually\nWarning Both need to be set to not throw an error',
         propertyName: 'sslConfig',
         parameters: [
             {
@@ -94,6 +104,7 @@ export default getParams([
                 name: 'port',
                 alias: 'udp',
                 shortName: 'u',
+                description: 'Requests for current timing info can be sent to this port\nCheck documentation on how to structure this packet',
                 type: 'number',
                 validateRaw: /^\d{2,6}$/,
                 switchValue: 8889
@@ -109,6 +120,7 @@ export default getParams([
     {
         name: 'broadcast',
         type: 'number',
+        description:'Broadcast timing info to all on local network listening on set port\nDefault is 8890',
         validateRaw: /^\d{2,6}$/,
         switchValue: 8890,
         group: 'udp',
@@ -117,6 +129,7 @@ export default getParams([
     {
         name: 'broadcast-user',
         alias: 'b-user',
+        description:'Limit broadcast to specific ids',
         type: encodeURIComponent,
         group: 'udp',
         propertyName: 'user',
@@ -130,6 +143,7 @@ export default getParams([
                 name: 'port',
                 alias: 'tcp',
                 shortName: 't',
+                description: 'Same as udp-port',
                 type: 'number',
                 validateRaw: /^\d{2,6}$/,
                 switchValue: 8891,
