@@ -1,4 +1,4 @@
-import { getParams } from './params';
+import { getParams } from 'dl-args';
 import { readFileSync, lstatSync } from 'fs';
 import { networkInterfaces } from 'os'
 
@@ -68,7 +68,7 @@ export default getParams([
     {
         name: 'ssl',
         type: getCertKey,
-        validate: val => val != null
+        validate: isNotNull
     },
     {
         groupName: 'ssl',
@@ -77,12 +77,12 @@ export default getParams([
             {
                 name: 'cert',
                 type: tryReadFile,
-                validate: val => val != null
+                validate: isNotNull
             },
             {
                 name: 'key',
                 type: tryReadFile,
-                validate: val => val != null
+                validate: isNotNull
             }
         ],
         finalize: finalizeSslConfig
@@ -216,6 +216,9 @@ function getCertKey(dir: string) {
         cert,
         key
     }
+}
+function isNotNull(val: any) {
+    return val != null
 }
 
 function tryReadFile(path: string) {
