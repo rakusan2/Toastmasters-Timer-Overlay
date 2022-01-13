@@ -1,4 +1,4 @@
-FROM node:12
+FROM node:17
 
 MAINTAINER Rakusan2 <10575235+rakusan2@users.noreply.github.com>
 
